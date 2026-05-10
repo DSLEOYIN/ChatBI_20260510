@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBI LangGraph 流程图设计 (优化版)</title>
+    <!-- 引入 Mermaid -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-width: 1200px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        p {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ChatBI LangGraph 核心架构设计 (优化版)</h1>
+    <p>经过 10 次内部逻辑推演，修复了上下文绕过漏洞、安全门禁熔断机制以及解读降级容错。可以直接使用右键保存为图片。</p>
+    
+    <div class="mermaid">
+graph TD
+    %% ================= 节点定义与样式 =================
+    classDef init fill:#f9f9f9,stroke:#d3d3d3,stroke-width:2px,border-radius:5px
+    classDef process fill:#e1f5fe,stroke:#81d4fa,stroke-width:2px,border-radius:5px
+    classDef check fill:#fff9c4,stroke:#fff59d,stroke-width:2px,border-radius:5px
+    classDef know fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px,border-radius:5px
+    classDef danger fill:#ffebee,stroke:#ef9a9a,stroke-width:2px,border-radius:5px
+    classDef terminal fill:#ffccbc,stroke:#ffab91,stroke-width:2px,border-radius:5px
+
+    START((START)):::init
+    END_NODE(((END))):::terminal
+    
+    init_node[初始化状态<br/>initialize_node]:::init
+    intent_node[意图识别<br/>intent_node]:::process
+    chat_node[闲聊回答<br/>chat_node]:::process
+    context_node[上下文补全/指代消解<br/>context_answer_node]:::process
+    task_node[构建分析任务<br/>build_bi_task_node]:::process
+    support_check[意图与数据校验<br/>supportability_check_node]:::check
+    support_resp[反问/拒绝支持<br/>supportability_response_node]:::danger
+    
+    knowledge_node[检索业务知识<br/>retrieve_knowledge_node]:::know
+    schema_node[组装数据库Schema<br/>schema_context_node]:::know
+    
+    sql_gen[生成 SQL<br/>generate_sql_node]:::process
+    sql_guard[SQL安全门禁<br/>guard_sql_node]:::check
+    sql_repair[自我修正 SQL<br/>repair_sql_node]:::process
+    sql_exec[执行 SQL<br/>execute_sql_node]:::process
+    
+    data_analyze[数据解读与图表配置<br/>analyze_data_node]:::process
+    metric_exp[附加口径说明<br/>metric_explanation_node]:::process
+    fail_node[全局失败兜底<br/>fail_node]:::danger
+
+    %% ================= 核心链路流转 =================
+    START --> init_node
+    init_node --> intent_node
+    
+    %% 意图路由
+    intent_node -. is_chat .-> chat_node
+    intent_node -. is_followup .-> context_node
+    intent_node -. is_data .-> task_node
+    
+    chat_node --> END_NODE
+    
+    %% 修复 1：上下文补全后，必须流向构建任务，避免绕过支持度校验！
+    context_node --> task_node
+    
+    %% 校验与拒绝
+    task_node --> support_check
+    support_check -. unsupported .-> support_resp
+    support_check -. supported .-> knowledge_node
+    support_resp --> END_NODE
+    
+    %% 知识与结构检索
+    knowledge_node --> schema_node
+    %% 修复 4：如果找不到 schema，直接短路拒绝，别去让大模型瞎编 SQL
+    schema_node -. schema_not_found .-> support_resp
+    schema_node -. schema_found .-> sql_gen
+    
+    %% SQL 生成与安全拦截
+    sql_gen -. success .-> sql_guard
+    sql_gen -. error .-> fail_node
+    
+    sql_guard -. safe .-> sql_exec
+    %% 修复 2：如果判定为恶意 SQL（DROP等），绝不去修，直接熔断！
+    sql_guard -. malicious_attack (拦截恶意指令) .-> fail_node
+    sql_guard -. repairable .-> sql_repair
+    
+    %% 修复 3：修复闭环，明确必须流回安全门禁，且有次数限制 (如 10 次)
+    sql_repair -. retry_allowed .-> sql_guard
+    sql_repair -. retry_limit_exceeded (次数超限) .-> fail_node
+    
+    %% 执行与解读
+    sql_exec -. success .-> data_analyze
+    sql_exec -. sql_error .-> sql_repair
+    sql_exec -. fatal_error .-> fail_node
+    
+    %% 修复 5：解读降级容错，防大量数据撑爆模型
+    data_analyze -. success .-> metric_exp
+    data_analyze -. generation_failed (越过错误降级) .-> metric_exp
+    
+    metric_exp --> END_NODE
+    fail_node --> END_NODE
+    </div>
+</div>
+
+</body>
+</html>

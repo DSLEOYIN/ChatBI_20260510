@@ -1,0 +1,2244 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: 国际ChatBI-智能问答V3.0-echart
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/volcengine_maas:0.0.7@f8e44422cfa5b9a6ac1f2d3b43ef1069868efdad1e5cec2590de3f53ceac37b0
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: hjlarry/database:0.0.5@20c5020a28c47834253cddf96c954596b96fffa93062bbd801e69515c710b894
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: yangyaofei/vllm:0.1.5@3eecf807d9767f40eb757ff70720291aa6055e9e1803893b4c93b61a5d4d4319
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/siliconflow:0.0.17@88c62094bb40b57a179a051bd6bb2b3a80bac535a2e8bb97047193ac363eb2e6
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables:
+  - description: ''
+    id: 7d1e2f0e-dc43-46c8-972c-619872cff003
+    name: intent_examples
+    selector:
+    - conversation
+    - intent_examples
+    value: "[\n    {\"input\": \"中东和中国有几个小时的时差？\", \"output\": \"闲聊\"},\n    {\"input\"\
+      : \"新能源汽车发展趋势如何？\", \"output\": \"闲聊\"},\n    {\"input\": \"双十一是哪天？\", \"output\"\
+      : \"闲聊\"},\n    {\"input\": \"能不能教我Excel的一些技巧？\", \"output\": \"闲聊\"},\n   \
+      \ {\"input\": \"中东地区都有哪些国家？\", \"output\": \"闲聊\"},\n    {\"input\": \"汽车保养一般多少公里做一次？\"\
+      , \"output\": \"闲聊\"},\n    {\"input\": \"中东市场和欧洲市场有什么区别？\", \"output\": \"\
+      闲聊\"},\n    {\"input\": \"现在几点了？\", \"output\": \"闲聊\"},\n    {\"input\": \"\
+      今天北京的天气如何？\", \"output\": \"闲聊\"},\n    {\"input\": \"最近股市行情怎么样？\", \"output\"\
+      : \"闲聊\"},\n    {\"input\": \"你觉得哪个城市比较适合旅游？\", \"output\": \"闲聊\"},\n    {\"\
+      input\": \"今年春节是几号？\", \"output\": \"闲聊\"},\n    {\"input\": \"下个月有什么节假日？\"\
+      , \"output\": \"闲聊\"},\n    {\"input\": \"今天上海下雨了吗？\", \"output\": \"闲聊\"},\n\
+      \    {\"input\": \"8月终端量是多少？\", \"output\": \"数据分析\"},\n    {\"input\": \"2024年中东公司销量如何？\"\
+      , \"output\": \"数据分析\"},\n    {\"input\": \"哪个国家销售最好？\", \"output\": \"数据分析\"\
+      },\n    {\"input\": \"2024年8月中东公司的终端量同比情况如何？\", \"output\": \"数据分析\"},\n   \
+      \ {\"input\": \"基于2024年的销售情况，你觉得哪个国家最好？\", \"output\": \"数据分析\"},\n    {\"input\"\
+      : \"2024年1月各个国家的终端量是多少\", \"output\": \"数据分析\"},\n    {\"input\": \"俄罗斯今年的订单量是多少？\"\
+      , \"output\": \"数据分析\"},\n    {\"input\": \"库存情况如何？\", \"output\": \"数据分析\"\
+      },\n]"
+    value_type: string
+  - description: 表结构
+    id: b83250bd-fe8e-4c09-b240-b049188cf23d
+    name: table_promt_new
+    selector:
+    - conversation
+    - table_promt_new
+    value: '批发终端日表（v_dm_sal_wolesale_terminal_dly）、
+
+      SC订单日表（v_dm_sal_sc_order_dly）、
+
+      库存日表（v_dm_sal_stock_dly）、
+
+      剩余订单日表（v_dm_sal_remain_order_dly）、
+
+      排产日表（v_dm_sal_scheduling_dly）、
+
+      批发终端预实表（v_dm_sal_wolesale_terminal_dly_v2）、
+
+      SC订单预实表（v_dm_sal_sc_order_dly_v2）、
+
+      排产预实表（v_dm_sal_scheduling_dly_v2）'
+    value_type: string
+  - description: 建表语句及表说明
+    id: 983b7f9d-925c-4056-a78c-79c92480fb26
+    name: create_table_prompt_new
+    selector:
+    - conversation
+    - create_table_prompt_new
+    value: "### 批发终端日表（v_dm_sal_wolesale_terminal_dly）\n记录了广汽集团国际市场各区域、国家的汽车批发量及终端销售量数据，支持按车型、业务类型等多维度分析。这张表的数据是日颗粒度的，涵盖国际销售网络的关键业绩指标。\n\
+      \n对应建表语句如下：\nCREATE TABLE `v_dm_sal_wolesale_terminal_dly` (\n    `id` bigint\
+      \ auto_increment primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\t\
+      comment'统计日期,格式：2025-03-01',\n    `area_name`\tvarchar(100)\tcomment'大区名称',例如：巴拿马公司、巴西公司、中东公司等\n\
+      \    `area_manager_name`\tvarchar(100)\tcomment'大区经理名称',例如：郭嘉、王星亮等\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称',例如：俄罗斯、利比亚、坦桑尼亚等\n    `country_manager_name`\tvarchar(100)\t\
+      comment'国家经理名称',例如：张焱鑫、司婉伊等\n    `dealer_name`\tvarchar(100)\tcomment'经销商名称',例如：Union\
+      \ OiL LLC、AL QUDRA ALARABIA FOR GENERAL TRADING CO. 、俄罗斯公司等\n    `model_name`\t\
+      varchar(100)\tcomment'车型名称',例如：E9、AION V、EMZOOM等\n    `business_type`\tvarchar(100)\t\
+      comment'业务类型',包含整车业务、新业务\n    `wholesale_qty`\tbigint\tcomment'批发量、销量',\n  \
+      \  `terminal_qty`\tbigint\tcomment'终端量'\n)\nCOMMENT='国际市场批发与终端销售日报表，支持区域与车型维度分析';\n\
+      \n### SC订单日表（v_dm_sal_sc_order_dly）\n记录了广汽集团国际市场各区域、国家的SC（Sales Contract）新增订单数据，包含大区、国家、车型分布等关键信息。\n\
+      \n对应建表语句如下：\ncreate table `v_dm_sal_sc_order_dly` (\n    `id` bigint auto_increment\
+      \ primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\tcomment'统计日期,格式：2025-03-01',\n\
+      \    `area_name`\tvarchar(100)\tcomment'大区名称',巴拿马公司、巴西公司、中东公司等\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称',例如：俄罗斯、利比亚、坦桑尼亚等\n    `dealer_name`\tvarchar(100)\t\
+      comment'经销商简称',例如：Union OiL LLC、AL QUDRA ALARABIA FOR GENERAL TRADING CO. 、俄罗斯公司等\n\
+      \    `trade_type`\tvarchar(100)\tcomment'贸易术语',\n    `model_name`\tvarchar(100)\t\
+      comment'车型名称例如：E9、AION V、EMZOOM等',\n    `order_qty`\tbigint\tcomment'订单量'\n\
+      )\nCOMMENT='国际市场新增SC订单日报表，支持区域、车型分析';\n\n### 库存日表（v_dm_sal_stock_dly）\n记录了广汽集团国际市场汽车库存相关信息的日统计数据，包括库存库龄分布、区域分布及库存状态。这张表的数据是日颗粒度的，涵盖经销商、子公司及厂端多层级库存信息。\n\
+      \n对应建表语句如下：\nCREATE TABLE `v_dm_sal_stock_dly` (\n    `id` bigint auto_increment\
+      \ comment '主键' primary key, -- 整数类型的自增字段，作为库存记录的唯一标识符（主键）\n    `period_td`\t\
+      varchar(100)\tcomment'统计日期，格式：2025-03-01',\n    `area_name`\tvarchar(100)\t\
+      comment'大区名称',例如：巴拿马公司、巴西公司、中东公司等\n    `country_name`\tvarchar(100)\tcomment'国家名称',例如：俄罗斯、利比亚、坦桑尼亚等\n\
+      \    `dealer_name`\tvarchar(100)\tcomment'经销商简称',例如：Union OiL LLC、AL QUDRA ALARABIA\
+      \ FOR GENERAL TRADING CO. 、俄罗斯公司等\n    `model_name`\tvarchar(100)\tcomment'车型名称',例如：M8、AION\
+      \ Y、EMKOO、HYPTEC HT等\n    `match_status`\tvarchar(100)\tcomment'配车状态',例如：车厂库存、在途等\n\
+      \    `dlr_onway_qty`\tbigint\tcomment'经销商在途',属于经销商库存\n    `dlr_instore_qty`\t\
+      bigint\tcomment'经销商在店/库',属于经销商库存\n    `co_onway_qty`\tbigint\tcomment'子公司在途',属于子公司库存\n\
+      \    `co_instore_qty`\tbigint\tcomment'子公司在库',属于子公司库存\n    `inhouse_stock_match_qty`\t\
+      bigint\tcomment'厂内库存已配车（厂端）',\n    `inhouse_stock_no_match_qty`\tbigint\tcomment'厂内库存未配车（厂端）',\n\
+      \    `inhouse_stock_build_no_match_qty`\tbigint\tcomment'厂内建库库存（厂端）',\n    `stock_aging_30`\t\
+      bigint\tcomment'30天以内库龄车辆数',\n    `stock_aging_31to60`\tbigint\tcomment'30-60天库龄车辆数',\n\
+      \    `stock_aging_61to90`\tbigint\tcomment'60-90天库龄车辆数',\n    `stock_aging_91to180`\t\
+      bigint\tcomment'90-180天库龄车辆数',\n    `stock_aging_181`\tbigint\tcomment'180以上库龄车辆数',\n\
+      \    `stock_qty`\tbigint\tcomment'总库存',经销商、子公司、厂端库存总和\n    `m3_inv_ter_qty`\t\
+      bigint\tcomment'库存度计算分母'\n)\nCOMMENT='国际市场库存表（日粒度），涵盖经销商、子公司及厂端库存，支持库龄分析及区域分布统计';\n\
+      \n### 剩余订单日表（v_dm_sal_remain_order_dly）\n记录了广汽集团国际市场各区域、国家的未交付订单状态及库存匹配情况，包含剩余订单量、配车进度及超时预警等关键指标。\n\
+      \n对应建表语句如下：\nCREATE TABLE `v_dm_sal_remain_order_dly` (\n    `id` bigint auto_increment\
+      \ primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\tcomment'统计日期,格式：2025-03-01',\n\
+      \    `area_name`\tvarchar(100)\tcomment'大区名称',例如：美洲大区、中亚大区、中东公司等\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称',例如：俄罗斯、尼日利亚、约旦等\n    `dealer_name`\tvarchar(100)\t\
+      comment'经销商名称',例如：Union OiL LLC、AL QUDRA ALARABIA FOR GENERAL TRADING CO. 、俄罗斯公司等\n\
+      \    `trade_type`\tvarchar(100)\tcomment'贸易术语',包含CFR、CIF、DAP、DPU、EXW、FCA、FOB\n\
+      \    `order_type`\tvarchar(100)\tcomment'订单状态',\n    `model_name`\tvarchar(100)\t\
+      comment'车型名称',例如E9、AION V、EMZOOM 等\n    `submit_qty`\tbigint\tcomment'剩余订单量',\n\
+      \    `match_qty`\tbigint\tcomment'配车量，包含【已配车超时未发、其他】',\n    `no_match_qty`\t\
+      bigint\tcomment'未配车数量，包含【超时未配车、其他】',\n    `overtime_no_match_qty`\tbigint\t\
+      comment'超时未配车数量，包含【超时未排产、其他】',\n    `overtime_no_shipped_qty`\tbigint\tcomment'已配车超时未发数量',\n\
+      \    `overtime_no_scheduled_qty`\tbigint\tcomment'超时未排产数量'\n)\nCOMMENT='国际市场剩余订单日报表，支持订单交付进度监控与超时预警分析';\n\
+      \n### 排产日表（v_dm_sal_scheduling_dly）\n记录了广汽集团国际市场各区域、国家的车辆排产计划及实际执行情况，包含工厂下线量、经销商交付量及排产进度等关键指标。\n\
+      \n对应建表语句如下：\nCREATE TABLE `v_dm_sal_scheduling_dly` (\n    `id` bigint auto_increment\
+      \ primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\tcomment'统计日期,格式：2025-03-01',\n\
+      \    `area_name`\tvarchar(100)\tcomment'大区名称例如：亚洲大区、中东公司等',\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称例如：俄罗斯、尼日利亚、约旦等',\n    `dealer_name`\tvarchar(100)\t\
+      comment'经销商名称例如：THH IMPORT EXPORT CO. LTD、俄罗斯公司等',\n    `factory_name`\tvarchar(100)\t\
+      comment'工厂名称例如：广州一线、杭州、宜昌等',\n    `model_name`\tvarchar(100)\tcomment'车型名称例如：E9、AION\
+      \ V、EMZOOM 等',\n    `delivery_qty`\tbigint\tcomment'交付量',\n    `product_qty`\t\
+      bigint\tcomment'下线量'\n)\nCOMMENT='国际市场排产日报表，支持排产计划执行监控与交付效率分析';\n\n### 批发终端预实表（v_dm_sal_wolesale_terminal_dly_v2）\n\
+      记录了广汽集团国际市场各区域、国家的汽车批发量及终端销售量数据以及批发计划和终端计划销售数据。这张表的数据是日颗粒度的，涵盖国际销售网络的关键业绩指标。\n\
+      \n对应建表语句如下：\nCREATE TABLE `v_dm_sal_wolesale_terminal_dly_v2` (\n    `id` bigint\
+      \ auto_increment primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\t\
+      comment'统计日期,格式：2025-03-01',\n    `area_name`\tvarchar(100)\tcomment'大区名称',例如：巴拿马公司、巴西公司、中东公司等\n\
+      \    `area_manager_name`\tvarchar(100)\tcomment'大区经理名称',例如：郭嘉、王星亮等\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称',例如：俄罗斯、利比亚、坦桑尼亚等\n    `country_manager_name`\tvarchar(100)\t\
+      comment'国家经理名称',例如：张焱鑫、司婉伊等\n    `wholesale_qty`\tbigint\tcomment'批发量、销量',\n\
+      \    `terminal_qty`\tbigint\tcomment'终端量',\n\t`bug_wholesale_qty` bigint comment\
+      \ '批发计划数',\n\t`bug_terminal_qty` bigint comment '终端计划数'\n)\nCOMMENT='国际市场批发与终端销售日报表、计划报表';\n\
+      \n### SC订单预实表（v_dm_sal_sc_order_dly_v2）\n记录了广汽集团国际市场各区域、国家的SC（Sales Contract）订单、计划订单数据，包含大区、国家分布等关键信息。\n\
+      \n对应建表语句如下：\ncreate table `v_dm_sal_sc_order_dly_v2` (\n    `id` bigint auto_increment\
+      \ primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\tcomment'统计日期,格式：2025-03-01',\n\
+      \    `area_name`\tvarchar(100)\tcomment'大区名称',巴拿马公司、巴西公司、中东公司等\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称',例如：俄罗斯、利比亚、坦桑尼亚等\n    `order_qty`\tbigint\tcomment'订单量',\n\
+      \t`bug_order_qty` bigint comment '计划订单数'\n)\nCOMMENT='国际市场SC订单、计划订单日报表';\n\n\
+      ###排产预实表（v_dm_sal_scheduling_dly_v2）\n记录了广汽集团国际市场各区域、国家的车辆排产计划及实际执行情况，包含工厂下线量及排产进度等关键指标。\n\
+      \n对应建表语句如下：\nCREATE TABLE `v_dm_sal_scheduling_dly` (\n    `id` bigint auto_increment\
+      \ primary key comment '主键ID，自增唯一标识',\n    `period_td`\tvarchar(100)\tcomment'统计日期,格式：2025-03-01',\n\
+      \    `area_name`\tvarchar(100)\tcomment'大区名称例如：亚洲大区、中东公司等',\n    `country_name`\t\
+      varchar(100)\tcomment'国家名称例如：俄罗斯、尼日利亚、约旦等',\n    `factory_name`\tvarchar(100)\t\
+      comment'工厂名称例如：广州一线、杭州、宜昌等',\n    `model_name`\tvarchar(100)\tcomment'车型名称例如：E9、AION\
+      \ V、EMZOOM 等',\n    `delivery_qty`\tbigint\tcomment'交付量',\n    `product_qty`\t\
+      bigint\tcomment'下线量',\n\t`bug_product_qty` bigint comment '下线计划数'\n)\nCOMMENT='国际市场排产日报表，支持排产计划执行监控与交付效率分析';"
+    value_type: string
+  - description: 数据库连接
+    id: 2672da5e-6901-4fc2-a42b-d5c82e396956
+    name: db_url_new
+    selector:
+    - conversation
+    - db_url_new
+    value: mysql+pymysql://aiwork:I!p0P(FZZt@10.30.16.21:6033/ads_international
+    value_type: string
+  - description: echarc代码
+    id: e53c7d49-7bfa-41c8-b034-88b344908091
+    name: echarc_text
+    selector:
+    - conversation
+    - echarc_text
+    value: ''
+    value_type: string
+  - description: sql 查询结果
+    id: f7e72c1f-5b64-4ab9-a866-bbecda6e900d
+    name: sql_text
+    selector:
+    - conversation
+    - sql_text
+    value: ''
+    value_type: string
+  - description: ''
+    id: e1aaaf08-04dd-4c77-a82c-30f31a969223
+    name: time_now
+    selector:
+    - conversation
+    - time_now
+    value: ''
+    value_type: string
+  - description: ''
+    id: cc83e4d2-4e2d-4276-b122-4a35257f5da5
+    name: retrvial_question
+    selector:
+    - conversation
+    - retrvial_question
+    value: ''
+    value_type: string
+  - description: ''
+    id: 4e6a093e-1867-48a3-8c62-ef9c879e318e
+    name: right_sql
+    selector:
+    - conversation
+    - right_sql
+    value: ''
+    value_type: string
+  - description: ''
+    id: f498e806-a61e-4d3d-81fb-91296b429358
+    name: right_data
+    selector:
+    - conversation
+    - right_data
+    value: ''
+    value_type: string
+  - description: 数据库和业务描述
+    id: f2bcd08c-e30d-4556-9e62-4879623d6cb9
+    name: DDL
+    selector:
+    - conversation
+    - DDL
+    value: ''
+    value_type: string
+  - description: 记录用户的历史问题
+    id: be07c061-a530-4aa2-be61-affebba569b9
+    name: query
+    selector:
+    - conversation
+    - query
+    value: []
+    value_type: array[string]
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 1500
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: 你好，我是你的数据分析助手广汽小财，请问有什么需要分析的？
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 2024年2月的终端量是多少
+    - 2024年2月的终端达成率是多少
+    - 2024年8月各国的库存度是多少
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: tool
+      id: 1750061504284-source-1750061971446-target
+      selected: false
+      source: '1750061504284'
+      sourceHandle: source
+      target: '1750061971446'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: 1753246006785-true-1753246037515-target
+      selected: false
+      source: '1753246006785'
+      sourceHandle: 'true'
+      target: '1753246037515'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: tool
+      id: 1749806730190-source-1749864589760-target
+      selected: false
+      source: '1749806730190'
+      sourceHandle: source
+      target: '1749864589760'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: 1753246006785-false-17567765092780-target
+      selected: false
+      source: '1753246006785'
+      sourceHandle: 'false'
+      target: '17567765092780'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: answer
+        targetType: llm
+      id: 17567765092780-source-1756815184903-target
+      selected: false
+      source: '17567765092780'
+      sourceHandle: source
+      target: '1756815184903'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: 1750061971446-fail-branch-1759047065164-target
+      selected: false
+      source: '1750061971446'
+      sourceHandle: fail-branch
+      target: '1759047065164'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: tool
+      id: 1759047065164-source-17590471368830-target
+      selected: false
+      source: '1759047065164'
+      sourceHandle: source
+      target: '17590471368830'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: answer
+      id: 17590471368830-fail-branch-1749864917865-target
+      selected: false
+      source: '17590471368830'
+      sourceHandle: fail-branch
+      target: '1749864917865'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: assigner
+      id: 1750061971446-source-1759047894168-target
+      selected: false
+      source: '1750061971446'
+      sourceHandle: source
+      target: '1759047894168'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: assigner
+        targetType: if-else
+      id: 1759047894168-source-1753246006785-target
+      selected: false
+      source: '1759047894168'
+      sourceHandle: source
+      target: '1753246006785'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: assigner
+      id: 17590471368830-source-17590479790740-target
+      selected: false
+      source: '17590471368830'
+      sourceHandle: source
+      target: '17590479790740'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: assigner
+        targetType: if-else
+      id: 17590479790740-source-1753246006785-target
+      selected: false
+      source: '17590479790740'
+      sourceHandle: source
+      target: '1753246006785'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: assigner
+        targetType: knowledge-retrieval
+      id: 1749864603944-source-1759763716020-target
+      selected: false
+      source: '1749864603944'
+      sourceHandle: source
+      target: '1759763716020'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: 1759763716020-source-1759763949300-target
+      selected: false
+      source: '1759763716020'
+      sourceHandle: source
+      target: '1759763949300'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1759763949300-source-1750061504284-target
+      selected: false
+      source: '1759763949300'
+      sourceHandle: source
+      target: '1750061504284'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: 1750061257586-source-17599905293840-target
+      selected: false
+      source: '1750061257586'
+      sourceHandle: source
+      target: '17599905293840'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: assigner
+        targetType: if-else
+      id: 1749864603944-source-1759996026475-target
+      selected: false
+      source: '1749864603944'
+      sourceHandle: source
+      target: '1759996026475'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: knowledge-retrieval
+      id: 1759996026475-false-1750061257586-target
+      selected: false
+      source: '1759996026475'
+      sourceHandle: 'false'
+      target: '1750061257586'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: knowledge-retrieval
+      id: 1759996026475-true-17599971579940-target
+      selected: false
+      source: '1759996026475'
+      sourceHandle: 'true'
+      target: '17599971579940'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: 17599971579940-source-17599971637430-target
+      selected: false
+      source: '17599971579940'
+      sourceHandle: source
+      target: '17599971637430'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: variable-aggregator
+      id: 17599971637430-source-1759997234093-target
+      selected: false
+      source: '17599971637430'
+      sourceHandle: source
+      target: '1759997234093'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: variable-aggregator
+        targetType: llm
+      id: 1759997234093-source-1750061504284-target
+      selected: false
+      source: '1759997234093'
+      sourceHandle: source
+      target: '1750061504284'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: variable-aggregator
+      id: 17599905293840-source-1759997234093-target
+      selected: false
+      source: '17599905293840'
+      sourceHandle: source
+      target: '1759997234093'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: 1753246006785-1e75bbc3-281a-4eb3-b7af-273dfb03b4c0-17736398437950-target
+      selected: false
+      source: '1753246006785'
+      sourceHandle: 1e75bbc3-281a-4eb3-b7af-273dfb03b4c0
+      target: '17736398437950'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: 1749864589760-source-1778050160251-target
+      selected: false
+      source: '1749864589760'
+      sourceHandle: source
+      target: '1778050160251'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: if-else
+      id: 1778050160251-source-1778050404495-target
+      source: '1778050160251'
+      sourceHandle: source
+      target: '1778050404495'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: assigner
+      id: 1778050404495-true-1749864603944-target
+      source: '1778050404495'
+      sourceHandle: 'true'
+      target: '1749864603944'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1778050404495-f7978b08-ddf3-4096-a5ba-0862ee0da148-1778050526473-target
+      source: '1778050404495'
+      sourceHandle: f7978b08-ddf3-4096-a5ba-0862ee0da148
+      target: '1778050526473'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 1778050526473-source-1778050604826-target
+      source: '1778050526473'
+      sourceHandle: source
+      target: '1778050604826'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 1756815184903-source-17532459667490-target
+      source: '1756815184903'
+      sourceHandle: source
+      target: '17532459667490'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables: []
+      height: 73
+      id: '1749806730190'
+      position:
+        x: -756.277849175817
+        y: 276
+      positionAbsolute:
+        x: -756.277849175817
+        y: 276
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: '%Y-%m-%d %H:%M:%S'
+          form: form
+          human_description:
+            en_US: Time format in strftime standard.
+            ja_JP: Time format in strftime standard.
+            pt_BR: Time format in strftime standard.
+            zh_Hans: strftime 标准的时间格式。
+          label:
+            en_US: Format
+            ja_JP: Format
+            pt_BR: Format
+            zh_Hans: 格式
+          llm_description: null
+          max: null
+          min: null
+          name: format
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: UTC
+          form: form
+          human_description:
+            en_US: Timezone
+            ja_JP: Timezone
+            pt_BR: Timezone
+            zh_Hans: 时区
+          label:
+            en_US: Timezone
+            ja_JP: Timezone
+            pt_BR: Timezone
+            zh_Hans: 时区
+          llm_description: null
+          max: null
+          min: null
+          name: timezone
+          options:
+          - label:
+              en_US: UTC
+              ja_JP: UTC
+              pt_BR: UTC
+              zh_Hans: UTC
+            value: UTC
+          - label:
+              en_US: America/New_York
+              ja_JP: America/New_York
+              pt_BR: America/New_York
+              zh_Hans: 美洲/纽约
+            value: America/New_York
+          - label:
+              en_US: America/Los_Angeles
+              ja_JP: America/Los_Angeles
+              pt_BR: America/Los_Angeles
+              zh_Hans: 美洲/洛杉矶
+            value: America/Los_Angeles
+          - label:
+              en_US: America/Chicago
+              ja_JP: America/Chicago
+              pt_BR: America/Chicago
+              zh_Hans: 美洲/芝加哥
+            value: America/Chicago
+          - label:
+              en_US: America/Sao_Paulo
+              ja_JP: America/Sao_Paulo
+              pt_BR: América/São Paulo
+              zh_Hans: 美洲/圣保罗
+            value: America/Sao_Paulo
+          - label:
+              en_US: Asia/Shanghai
+              ja_JP: Asia/Shanghai
+              pt_BR: Asia/Shanghai
+              zh_Hans: 亚洲/上海
+            value: Asia/Shanghai
+          - label:
+              en_US: Asia/Ho_Chi_Minh
+              ja_JP: Asia/Ho_Chi_Minh
+              pt_BR: Ásia/Ho Chi Minh
+              zh_Hans: 亚洲/胡志明市
+            value: Asia/Ho_Chi_Minh
+          - label:
+              en_US: Asia/Tokyo
+              ja_JP: Asia/Tokyo
+              pt_BR: Asia/Tokyo
+              zh_Hans: 亚洲/东京
+            value: Asia/Tokyo
+          - label:
+              en_US: Asia/Dubai
+              ja_JP: Asia/Dubai
+              pt_BR: Asia/Dubai
+              zh_Hans: 亚洲/迪拜
+            value: Asia/Dubai
+          - label:
+              en_US: Asia/Kolkata
+              ja_JP: Asia/Kolkata
+              pt_BR: Asia/Kolkata
+              zh_Hans: 亚洲/加尔各答
+            value: Asia/Kolkata
+          - label:
+              en_US: Asia/Seoul
+              ja_JP: Asia/Seoul
+              pt_BR: Asia/Seoul
+              zh_Hans: 亚洲/首尔
+            value: Asia/Seoul
+          - label:
+              en_US: Asia/Singapore
+              ja_JP: Asia/Singapore
+              pt_BR: Asia/Singapore
+              zh_Hans: 亚洲/新加坡
+            value: Asia/Singapore
+          - label:
+              en_US: Europe/London
+              ja_JP: Europe/London
+              pt_BR: Europe/London
+              zh_Hans: 欧洲/伦敦
+            value: Europe/London
+          - label:
+              en_US: Europe/Berlin
+              ja_JP: Europe/Berlin
+              pt_BR: Europe/Berlin
+              zh_Hans: 欧洲/柏林
+            value: Europe/Berlin
+          - label:
+              en_US: Europe/Moscow
+              ja_JP: Europe/Moscow
+              pt_BR: Europe/Moscow
+              zh_Hans: 欧洲/莫斯科
+            value: Europe/Moscow
+          - label:
+              en_US: Australia/Sydney
+              ja_JP: Australia/Sydney
+              pt_BR: Australia/Sydney
+              zh_Hans: 澳大利亚/悉尼
+            value: Australia/Sydney
+          - label:
+              en_US: Pacific/Auckland
+              ja_JP: Pacific/Auckland
+              pt_BR: Pacific/Auckland
+              zh_Hans: 太平洋/奥克兰
+            value: Pacific/Auckland
+          - label:
+              en_US: Africa/Cairo
+              ja_JP: Africa/Cairo
+              pt_BR: Africa/Cairo
+              zh_Hans: 非洲/开罗
+            value: Africa/Cairo
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          format: ''
+          timezone: ''
+        provider_id: time
+        provider_name: time
+        provider_type: builtin
+        selected: false
+        title: 获取当前时间
+        tool_configurations:
+          format:
+            type: constant
+            value: '%Y-%m-%d %H:%M:%S'
+          timezone:
+            type: constant
+            value: Asia/Shanghai
+        tool_description: 一个用于获取当前时间的工具。
+        tool_label: 获取当前时间
+        tool_name: current_time
+        tool_node_version: '2'
+        tool_parameters: {}
+        type: tool
+      height: 114
+      id: '1749864589760'
+      position:
+        x: -421.19145461754704
+        y: 297
+      positionAbsolute:
+        x: -421.19145461754704
+        y: 297
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - '1749864589760'
+          - text
+          variable_selector:
+          - conversation
+          - time_now
+          write_mode: over-write
+        selected: false
+        title: 记录当前时间
+        type: assigner
+        version: '2'
+      height: 84
+      id: '1749864603944'
+      position:
+        x: 762.6959292230042
+        y: 276
+      positionAbsolute:
+        x: 762.6959292230042
+        y: 276
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '
+
+          本次数据查询失败。
+
+
+          建议您重新提问或联系数据支持团队确认数据状态。'
+        desc: ''
+        selected: false
+        title: 数据异常回复
+        type: answer
+        variables: []
+      height: 116
+      id: '1749864917865'
+      position:
+        x: 3826.651549924669
+        y: 181.0391738305035
+      positionAbsolute:
+        x: 3826.651549924669
+        y: 181.0391738305035
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - x8gALswZhHX1XwrVGPdlKu0P1KSJ26rRPkABqIkJ/gJacQ7UH+ge9kLF95A8wvpp
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: netease-youdao/bce-reranker-base_v1
+            provider: langgenius/siliconflow/siliconflow
+          score_threshold: null
+          top_k: 10
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: BAAI/bge-m3
+              embedding_provider_name: langgenius/siliconflow/siliconflow
+              vector_weight: 0.7
+        query_attachment_selector: []
+        query_variable_selector:
+        - sys
+        - query
+        retrieval_mode: multiple
+        selected: false
+        title: 知识检索
+        type: knowledge-retrieval
+      height: 90
+      id: '1750061257586'
+      position:
+        x: 1546
+        y: 408
+      positionAbsolute:
+        x: 1546
+        y: 408
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1759997234093'
+          - output
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params: {}
+          mode: chat
+          name: DeepSeek-V3.1
+          provider: langgenius/volcengine_maas/volcengine_maas
+        prompt_template:
+        - id: 389a3477-835d-49bf-8e17-ef9aea1427c2
+          role: system
+          text: "#你是一个 SQL 生成专家，生成SQL用于查询MYSQL数据库。请严格遵守以下黄金准则。\n\n ## 黄金准则 0： 你必须优先参考\
+            \ {{#context#}}\n## 黄金准则 1：当用户的提问对象是“广汽国际”或“国际”时，你的【默认行为】应该是不针对“广汽国际”加where条件。\n\
+            \n ## 黄金准则 2：只返回 SQL。你的回答中只能包含纯 SQL 代码，禁止包含任何解释性文字。\n\n ## 黄金准则 3：SQL\
+            \ 代码编写规则\n**严禁使用**：left join、join、right join 等任何多表关联语法。\n**强制要求**：如涉及多表查询需通过子查询先聚合指标生成临时表，用逗号分隔表别名的方式实现，格式参考：SELECT\
+            \ a.值1, b.值2 FROM (子查询1) a, (子查询2) b；\n\n### RAG 检索结果如下：\n{{#1759763949300.result#}}\n\
+            \n## 黄金准则 4：在生成的 SQL 查询中，请为 SELECT 子句中的 每一个 输出列（包括原始字段、计算字段、聚合函数结果）精确地 指定一个 清晰、简洁的中文别名（使用 AS 关键字）。确保最终结果表的列名 全部 显示为中文别名。请避免任何潜在的语法错误。保持查询逻辑和数据准确性不变。\n\
+            \n## 黄金准则 5：尊重时间聚合层级。\n当用户的提问时间范围是一个整体时（例如“2025年”、“第一季度”、“上半年”），你应该返回该【完整时间段】的【聚合总值】。除非用户明确要求按月、按周或按天查看（例如，提问中包含“每月”、“各月”、“趋势”等词语），含趋势默认按月查看，否则【严禁】将结果按更细的时间粒度（如`month(period_td)`）进行\
+            \ GROUP BY 拆分。\n**范例**：\n **用户问题**：“2025年中东公司终端情况”\n**错误处理**：GROUP BY\
+            \ `month(period_td)`，输出12条月度数据。\n**正确处理**：计算 `2025-01-01` 到 `2025-12-31`\
+            \ 的总和，只输出一条汇总数据。\n\n## 黄金准则 6：严格执行 库存 / 剩余订单 的时间取值规则\n核心原则：一律取时间段最后一天数据\n\
+            **当月库存**：取昨天的数据。\n**查询非当月**：取该月最后一天的数据。\n**查询整年**：取该年最后一天的数据，where条件包含period_td\
+            \ = LAST_DAY(DATE_FORMAT(period_td, '%Y-12-01'))。\n\n## 黄金准则 7：在计算达成率、占比等比例类指标时：\n\
+            1.计算结果统一保留两位小数，并必须带上百分号「%」展示；仅库存度指标除外，无需乘以 100、不加百分号；\n2.需同步单独查询并明确列出该指标对应的分子与分母原始数据，不可省略。"
+        - id: 02e38cee-25f6-46f3-9cd4-0489a99918cb
+          role: user
+          text: '{{#sys.query#}}
+
+
+            # 报表和字段说明：
+
+            ## 1-报表名
+
+            {{#conversation.table_promt_new#}}
+
+
+            ### 用表注意事项：
+
+            当用户问广汽国际的终端 或 批发 或 产量 或 订单 指标数据问题时，应优先查询 批发终端日表 或 SC订单日表 或排产日表，如果问题涉及目标或者达成率，才查询
+            批发终端预实表 或 SC订单预实表 或 排产预实表
+
+
+            ## 2-各表的建表语句和业务含义参考
+
+            {{#conversation.create_table_prompt_new#}}
+
+
+            ## 3-核心指标说明
+
+            **交付量**：delivery_qty（又名 产量、排产量）
+
+            **批发量**：wholesale_qty（又名 批发、销量、发车）
+
+            **终端**：terminal_qty （又名零售量）
+
+            **销量**：仅包含批发量'
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              sql:
+                type: string
+            required:
+            - sql
+            type: object
+        structured_output_enabled: true
+        title: ' AI 生成 SQL 语句'
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 88
+      id: '1750061504284'
+      position:
+        x: 2458
+        y: 276
+      positionAbsolute:
+        x: 2458
+        y: 276
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        error_strategy: fail-branch
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The SQL query string.
+            ja_JP: The SQL query string.
+            pt_BR: The SQL query string.
+            zh_Hans: SQL 查询语句。
+          label:
+            en_US: SQL Query
+            ja_JP: SQL Query
+            pt_BR: SQL Query
+            zh_Hans: SQL 查询语句
+          llm_description: The SQL query string.
+          max: null
+          min: null
+          name: query
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Optional, Filling in this field will overwrite the database connection
+              entered during authorization.
+            ja_JP: Optional, Filling in this field will overwrite the database connection
+              entered during authorization.
+            pt_BR: Optional, Filling in this field will overwrite the database connection
+              entered during authorization.
+            zh_Hans: 选填，填写后将覆盖授权时填写的数据库连接。
+          label:
+            en_US: DB URI
+            ja_JP: DB URI
+            pt_BR: DB URI
+            zh_Hans: DB URI
+          llm_description: ''
+          max: null
+          min: null
+          name: db_uri
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: json
+          form: form
+          human_description:
+            en_US: Choose the output format.
+            ja_JP: Choose the output format.
+            pt_BR: Choose the output format.
+            zh_Hans: 选择输出格式。
+          label:
+            en_US: Output format
+            ja_JP: Output format
+            pt_BR: Output format
+            zh_Hans: 输出格式
+          llm_description: ''
+          max: null
+          min: null
+          name: format
+          options:
+          - label:
+              en_US: JSON
+              ja_JP: JSON
+              pt_BR: JSON
+              zh_Hans: JSON
+            value: json
+          - label:
+              en_US: CSV
+              ja_JP: CSV
+              pt_BR: CSV
+              zh_Hans: CSV
+            value: csv
+          - label:
+              en_US: YAML
+              ja_JP: YAML
+              pt_BR: YAML
+              zh_Hans: YAML
+            value: yaml
+          - label:
+              en_US: Markdown
+              ja_JP: Markdown
+              pt_BR: Markdown
+              zh_Hans: Markdown
+            value: md
+          - label:
+              en_US: Excel
+              ja_JP: Excel
+              pt_BR: Excel
+              zh_Hans: Excel
+            value: xlsx
+          - label:
+              en_US: HTML
+              ja_JP: HTML
+              pt_BR: HTML
+              zh_Hans: HTML
+            value: html
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: 'Optional. For example {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              More connection options can be found at https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+            ja_JP: 'Optional. For example {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              More connection options can be found at https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+            pt_BR: 'Optional. For example {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              More connection options can be found at https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+            zh_Hans: '选填项。例如 {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              更多连接选项可参考 https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+          label:
+            en_US: DB Config Options
+            ja_JP: DB Config Options
+            pt_BR: DB Config Options
+            zh_Hans: 数据库连接配置选项
+          llm_description: ''
+          max: null
+          min: null
+          name: config_options
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        params:
+          config_options: ''
+          db_uri: ''
+          format: ''
+          query: ''
+        provider_id: hjlarry/database/database
+        provider_name: hjlarry/database/database
+        provider_type: builtin
+        retry_config:
+          max_retries: 3
+          retry_enabled: false
+          retry_interval: 1000
+        selected: false
+        title: 首次-SQL 语句查询获取数据
+        tool_configurations:
+          config_options:
+            type: constant
+            value: null
+          format:
+            type: constant
+            value: md
+        tool_description: 此工具用于在已存在的数据库中执行 SQL 查询。
+        tool_label: SQL Execute
+        tool_name: sql_execute
+        tool_node_version: '2'
+        tool_parameters:
+          db_uri:
+            type: mixed
+            value: '{{#conversation.db_url_new#}}'
+          query:
+            type: mixed
+            value: '{{#1750061504284.structured_output.sql#}}'
+        type: tool
+      height: 150
+      id: '1750061971446'
+      position:
+        x: 2853.291613190243
+        y: 285.07391494628513
+      positionAbsolute:
+        x: 2853.291613190243
+        y: 285.07391494628513
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#1756815184903.text#}}'
+        desc: ''
+        selected: false
+        title: 图像可视化
+        type: answer
+        variables: []
+      height: 102
+      id: '17532459667490'
+      position:
+        x: 4973.930209590505
+        y: 550.9235357426312
+      positionAbsolute:
+        x: 4973.930209590505
+        y: 550.9235357426312
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: empty
+            id: 91a809ad-dbdb-438a-9981-15aed400753f
+            value: ''
+            varType: string
+            variable_selector:
+            - conversation
+            - sql_text
+          id: 'true'
+          logical_operator: or
+        - case_id: 1e75bbc3-281a-4eb3-b7af-273dfb03b4c0
+          conditions:
+          - comparison_operator: contains
+            id: 09e2aa5b-bdb0-4595-a2d6-b59e1cfe9236
+            value: None
+            varType: string
+            variable_selector:
+            - conversation
+            - sql_text
+          id: 1e75bbc3-281a-4eb3-b7af-273dfb03b4c0
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: SQL数据获取判断
+        type: if-else
+      height: 172
+      id: '1753246006785'
+      position:
+        x: 4025.890682329308
+        y: 419
+      positionAbsolute:
+        x: 4025.890682329308
+        y: 419
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '
+
+          当前数据查询为空，请更换问题查询。'
+        desc: ''
+        selected: false
+        title: 数据为空回复-1
+        type: answer
+        variables: []
+      height: 100
+      id: '1753246037515'
+      position:
+        x: 4320.1006392836825
+        y: 306.5231109355128
+      positionAbsolute:
+        x: 4320.1006392836825
+        y: 306.5231109355128
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '
+
+          {{#conversation.sql_text#}}
+
+
+          可视化图表绘制如下：
+
+          '
+        desc: ''
+        selected: false
+        title: 数据查询完成 (2)
+        type: answer
+        variables: []
+      height: 103
+      id: '17567765092780'
+      position:
+        x: 4299.95900587349
+        y: 559
+      positionAbsolute:
+        x: 4299.95900587349
+        y: 559
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - conversation
+          - sql_text
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: Qwen3-32B
+          provider: yangyaofei/vllm/vllm
+        prompt_template:
+        - id: 54c7a3fd-1cbc-4374-a4c9-79d7cfbace46
+          role: system
+          text: "/no_think\n# 角色\n\n你是一名顶级的、精通 ECharts 的数据可视化专家。你的任务是分析用户问题和数据查询结果，将数据查询结果转换为一个严格echart符合要求的\
+            \ JSON对象，用于驱动可视化图表。\n\n# 任务\n\n1.  **分析输入**：\n分析SQL 数据库查询结果中的数据结构，识别出维度（通常是文本或日期，用于分类轴）和指标（通常是数字，用于数值轴）。\n\
+            2.  **选择图表类型 chart_type**：根据数据特征，选择最合适的图表类型。\n\n- 如果数据包含时间序列，优先选择 `line`\
+            \ (折线图)。\n- 如果数据是类别和数值的对比，优先选择 `bar` (柱状图)。\n- 如果数据是部分占总体的比例，可选择 `pie`\
+            \ (饼图)。\n- 如果包含两个或更多数值列，可选择多系列 `bar`/`line` 图。\n\n3.  **构建配置**：根据选择的图表类型和数据，生成一个完整的\
+            \ ECharts `chart_config` 对象。这包括：\n\n*   一个有意义的 `title`。\n\n*   正确的 `xAxis`\
+            \ 和 `yAxis` 配置。\n\n*   包含所有指标的 `series` 数组，确保每个系列的 `name` 和 `data` 都被正确填充。\n\
+            \n*   必要的 `legend` (图例)。\n\n4. **生成最终 JSON**：将所有部分组合成最终的 JSON 对象。\n\n\
+            其中，data 必须是{{#conversation.sql_text#}}传入的原始、未经修改的 JSON 数据。\n如果数据中包含\"\
+            合计\"和分项的内容，只需要呈现分项内容。\n例如：\n| 品牌 | 实绩产量   | 目标产量   |\n| -- | ------ |\
+            \ ------ |\n| 品牌 1 |\n| 品牌 2 | \n| 品牌 3 | \n| 合计 | \n\n仅保留 \n| 品牌 | 实绩产量\
+            \   | 目标产量   |\n| -- | ------ | ------ |\n| 品牌 1 |\n| 品牌 2 | \n| 品牌 3\
+            \ | \n\n\n请注意：【合计】部分不需要呈现\n\n如果数据结果为0或者NULL，就不展示\n\n# 输出规格\n\n你必须严格按照以下结构输出，不能包含任何额外的解释、注释或\
+            \ markdown 标记。\n输出内容如下标志包裹在里。\n```echarts  \n\n```\n\n\n# 格式要求：\n\n---\n\
+            ## 0. 柱状图(Bar Chart)\n\n```echarts\n{\n  \"title\": {\n    \"text\": \"\
+            Sample Bar Chart\",\n    \"left\": \"center\"\n  },\n  \"xAxis\": {\n\
+                \"type\": \"category\",\n    \"data\": [\"A\", \"B\", \"C\"]\n  },\n\
+              \"yAxis\": {\n    \"type\": \"value\"\n  },\n  \"series\": [\n    {\n\
+                  \"data\": [25, 40, 15],\n      \"type\": \"bar\"\n    }\n  ]\n}\n\
+            ```\n\n\n\n## 1. 折线图 (Line Chart)\n\n**场景**: 展示公司近几个月的“收入”和“利润”变化趋势。这是一个典型的多系列时序数据对比场景。\n\
+            \n```echart\n{\n  \"title\": {\n    \"text\": \"月度收入与利润趋势图\",\n    \"\
+            left\": \"center\"\n  },\n  \"tooltip\": {\n    \"trigger\": \"axis\"\n\
+              },\n  \"legend\": {\n    \"data\": [\"收入\", \"利润\"],\n    \"top\": \"\
+            bottom\"\n  },\n  \"grid\": {\n    \"left\": \"3%\",\n    \"right\": \"\
+            4%\",\n    \"bottom\": \"10%\",\n    \"containLabel\": true\n  },\n  \"\
+            xAxis\": {\n    \"type\": \"category\",\n    \"boundaryGap\": false,\n\
+                \"data\": [\"一月\", \"二月\", \"三月\", \"四月\", \"五月\", \"六月\"]\n  },\n\
+              \"yAxis\": {\n    \"type\": \"value\",\n    \"name\": \"金额 (万元)\"\n\
+              },\n  \"series\": [\n    {\n      \"name\": \"收入\",\n      \"type\"\
+            : \"line\",\n      \"smooth\": true,\n      \"data\": [120, 132, 101,\
+            \ 134, 90, 230]\n    },\n    {\n      \"name\": \"利润\",\n      \"type\"\
+            : \"line\",\n      \"smooth\": true,\n      \"data\": [80, 92, 71, 94,\
+            \ 60, 180]\n    }\n  ]\n}\n```\n\n#### 关键点解析\n\n*   **多系列**: `series`\
+            \ 是一个包含两个对象的数组，每个对象代表一条折线。\n*   **类型声明**: 每个系列都明确通过 `\"type\": \"line\"\
+            ` 指定为折线图。\n*   **数据对应**: `series` 中每个对象的 `name` (`\"收入\"`, `\"利润\"`) 与\
+            \ `legend.data` 中的项一一对应，实现了图例的点击筛选功能。\n*   **坐标轴类型**: `xAxis` 是 `\"category\"\
+            ` 类型，`yAxis` 是 `\"value\"` 类型，这是时序趋势图的标准配置。\n\n---\n\n## 2. 组合图 (Bar &\
+            \ Line Chart)\n\n**场景**: 在同一张图上展示“月度降雨量”（适合用柱状图表示总量）和“月度平均温度”（适合用折线图表示趋势）。这是一个典型的、需要使用双\
+            \ Y 轴的组合图场景。\n\n```echart\n{\n  \"title\": {\n    \"text\": \"月度降雨量与平均温度\"\
+            ,\n    \"left\": \"center\"\n  },\n  \"tooltip\": {\n    \"trigger\":\
+            \ \"axis\",\n    \"axisPointer\": {\n      \"type\": \"cross\"\n    }\n\
+              },\n  \"legend\": {\n    \"data\": [\"降雨量\", \"平均温度\"],\n    \"top\"\
+            : \"bottom\"\n  },\n  \"xAxis\": [\n    {\n      \"type\": \"category\"\
+            ,\n      \"data\": [\"1月\", \"2月\", \"3月\", \"4月\", \"5月\", \"6月\"]\n\
+                }\n  ],\n  \"yAxis\": [\n    {\n      \"type\": \"value\",\n     \
+            \ \"name\": \"降雨量 (ml)\",\n      \"position\": \"left\",\n      \"axisLabel\"\
+            : {\n        \"formatter\": \"{value} ml\"\n      }\n    },\n    {\n \
+            \     \"type\": \"value\",\n      \"name\": \"温度 (°C)\",\n      \"position\"\
+            : \"right\",\n      \"axisLabel\": {\n        \"formatter\": \"{value}\
+            \ °C\"\n      }\n    }\n  ],\n  \"series\": [\n    {\n      \"name\":\
+            \ \"降雨量\",\n      \"type\": \"bar\",\n      \"data\": [2.0, 4.9, 7.0,\
+            \ 23.2, 25.6, 76.7]\n    },\n    {\n      \"name\": \"平均温度\",\n      \"\
+            type\": \"line\",\n      \"yAxisIndex\": 1,\n      \"data\": [2.0, 2.2,\
+            \ 3.3, 4.5, 6.3, 10.2]\n    }\n  ]\n}\n```\n\n#### 关键点解析\n\n*   **组合类型**:\
+            \ `series` 数组中包含了两种不同 `type` 的对象 (`\"bar\"` 和 `\"line\"`)。\n*   **双Y轴**:\
+            \ `yAxis` 是一个包含两个对象的数组，分别定义了左侧和右侧的坐标轴。\n*   **系列与轴的关联**: `\"type\": \"\
+            line\"` 的系列通过 `\"yAxisIndex\": 1` 属性，被明确指定使用 `yAxis` 数组中索引为 1 的坐标轴。**这是实现组合图最核心的配置**。\n\
+            *   **独立格式化**: 每个 `yAxis` 都可以有自己独立的 `name` 和 `axisLabel.formatter`。\n\n\
+            ---\n\n## 3. 饼图 (Pie Chart)\n\n**场景**: 展示不同搜索引擎的市场份额占比。这是典型的部分占总体的比例分析场景。\n\
+            \n```echart\n{\n  \"title\": {\n    \"text\": \"搜索引擎市场份额\",\n    \"subtext\"\
+            : \"虚构数据\",\n    \"left\": \"center\"\n  },\n  \"tooltip\": {\n    \"\
+            trigger\": \"item\",\n    \"formatter\": \"{a} <br/>{b} : {c} ({d}%)\"\
+            \n  },\n  \"legend\": {\n    \"orient\": \"vertical\",\n    \"left\":\
+            \ \"left\",\n    \"data\": [\"Google\", \"Bing\", \"Baidu\", \"DuckDuckGo\"\
+            , \"Others\"]\n  },\n  \"series\": [\n    {\n      \"name\": \"市场份额\"\
+            ,\n      \"type\": \"pie\",\n      \"radius\": \"50%\",\n      \"data\"\
+            : [\n        { \"value\": 1048, \"name\": \"Google\" },\n        { \"\
+            value\": 735, \"name\": \"Baidu\" },\n        { \"value\": 580, \"name\"\
+            : \"Bing\" },\n        { \"value\": 484, \"name\": \"DuckDuckGo\" },\n\
+                    { \"value\": 300, \"name\": \"Others\" }\n      ],\n      \"emphasis\"\
+            : {\n        \"itemStyle\": {\n          \"shadowBlur\": 10,\n       \
+            \   \"shadowOffsetX\": 0,\n          \"shadowColor\": \"rgba(0, 0, 0,\
+            \ 0.5)\"\n        }\n      }\n    }\n  ]\n}\n```\n\n#### 关键点解析\n\n*  \
+            \ **无坐标轴**: 基础饼图没有 `xAxis` 和 `yAxis`。\n*   **数据结构**: `series.data` 的结构是\
+            \ `[{ \"value\": 1048, \"name\": \"Google\" }, ...]`，每个对象代表一个扇区。\n*  \
+            \ **提示框触发**: `tooltip.trigger` 通常设置为 `\"item\"`，针对单个数据项（扇区）触发。\n*   **格式化**:\
+            \ `tooltip.formatter` 使用 `{a}` (系列名), `{b}` (数据项名), `{c}` (数值), `{d}`\
+            \ (百分比) 等占位符进行丰富的格式化。\n*   **半径**: `series.radius` 控制饼图的大小。设置为 `['40%',\
+            \ '70%']` 可以创建环形图（甜甜圈图）。"
+        - id: 07c010c0-c718-4b73-b162-fe550292c66a
+          role: user
+          text: '用户问题是：{{#context#}}
+
+            数据查询结果是：{{#conversation.sql_text#}}'
+        - id: 83059ad9-f2fa-4b2e-9ddb-1978d20425be
+          role: assistant
+          text: ''
+        selected: false
+        structured_output_enabled: true
+        title: Echart 渲染代码生成
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 88
+      id: '1756815184903'
+      position:
+        x: 4566.009577909073
+        y: 559
+      positionAbsolute:
+        x: 4566.009577909073
+        y: 559
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: DeepSeek-V3.1
+          provider: langgenius/volcengine_maas/volcengine_maas
+        prompt_template:
+        - id: d0af136a-0126-405b-a16c-e68f1360a5da
+          role: system
+          text: "Role: SQL Debugging Expert\n\nContext\n  You are an expert at correcting\
+            \ invalid SQL queries. You will be given an incorrect SQL query, a list\
+            \ of table/column names that were identified as invalid, and the correct\
+            \ database DDL schema. Your task is to fix the query so it strictly adheres\
+            \ to the provided schema.\n\n Original User Question:\n {{#sys.query#}}\n\
+            \n  Incorrect SQL Query Generated Previously:\n{{#1750061504284.structured_output.sql#}}\n\
+            \n上一个 SQL 执行报错信息：\n{{#1750061971446.error_message#}}\n错误类型：\n{{#1750061971446.error_type#}}\n\
+            \n请先仔细分析用户问题和上一个 SQL内容、报错信息、错误类型；先分析错误的原因，一步一步设置优化计划后，再执行 SQL 修正。\n\n\
+              INSTRUCTION:\n  Please rewrite the incorrect SQL query to be a valid\
+            \ query that answers the original user question.\n   - CRITICAL: You MUST\
+            \ ONLY use table and column names that exist in the provided DDL schema.\n\
+               - Pay close attention to the Identified Invalid Names and correct them.\n\
+               - Ensure the final query logic correctly reflects the user's intent.\n\
+               - Only output the corrected, raw SQL query. Do not add any explanation\
+            \ or markdown formatting.\n\n  Correct Database DDL Schema:\n  '''\n{{#conversation.create_table_prompt_new#}}\n\
+            \n  '''"
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              sql:
+                type: string
+            required:
+            - sql
+            type: object
+        structured_output_enabled: true
+        title: SQL 修正节点
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 88
+      id: '1759047065164'
+      position:
+        x: 3153.1889207446457
+        y: 172.05967089375827
+      positionAbsolute:
+        x: 3153.1889207446457
+        y: 172.05967089375827
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        error_strategy: fail-branch
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The SQL query string.
+            ja_JP: The SQL query string.
+            pt_BR: The SQL query string.
+            zh_Hans: SQL 查询语句。
+          label:
+            en_US: SQL Query
+            ja_JP: SQL Query
+            pt_BR: SQL Query
+            zh_Hans: SQL 查询语句
+          llm_description: The SQL query string.
+          max: null
+          min: null
+          name: query
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Optional, Filling in this field will overwrite the database connection
+              entered during authorization.
+            ja_JP: Optional, Filling in this field will overwrite the database connection
+              entered during authorization.
+            pt_BR: Optional, Filling in this field will overwrite the database connection
+              entered during authorization.
+            zh_Hans: 选填，填写后将覆盖授权时填写的数据库连接。
+          label:
+            en_US: DB URI
+            ja_JP: DB URI
+            pt_BR: DB URI
+            zh_Hans: DB URI
+          llm_description: ''
+          max: null
+          min: null
+          name: db_uri
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: json
+          form: form
+          human_description:
+            en_US: Choose the output format.
+            ja_JP: Choose the output format.
+            pt_BR: Choose the output format.
+            zh_Hans: 选择输出格式。
+          label:
+            en_US: Output format
+            ja_JP: Output format
+            pt_BR: Output format
+            zh_Hans: 输出格式
+          llm_description: ''
+          max: null
+          min: null
+          name: format
+          options:
+          - label:
+              en_US: JSON
+              ja_JP: JSON
+              pt_BR: JSON
+              zh_Hans: JSON
+            value: json
+          - label:
+              en_US: CSV
+              ja_JP: CSV
+              pt_BR: CSV
+              zh_Hans: CSV
+            value: csv
+          - label:
+              en_US: YAML
+              ja_JP: YAML
+              pt_BR: YAML
+              zh_Hans: YAML
+            value: yaml
+          - label:
+              en_US: Markdown
+              ja_JP: Markdown
+              pt_BR: Markdown
+              zh_Hans: Markdown
+            value: md
+          - label:
+              en_US: Excel
+              ja_JP: Excel
+              pt_BR: Excel
+              zh_Hans: Excel
+            value: xlsx
+          - label:
+              en_US: HTML
+              ja_JP: HTML
+              pt_BR: HTML
+              zh_Hans: HTML
+            value: html
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: 'Optional. For example {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              More connection options can be found at https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+            ja_JP: 'Optional. For example {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              More connection options can be found at https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+            pt_BR: 'Optional. For example {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              More connection options can be found at https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+            zh_Hans: '选填项。例如 {"connect_args": {"ssl": {"ca": "/path/to/ca.pem"}}}
+
+              更多连接选项可参考 https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+
+              '
+          label:
+            en_US: DB Config Options
+            ja_JP: DB Config Options
+            pt_BR: DB Config Options
+            zh_Hans: 数据库连接配置选项
+          llm_description: ''
+          max: null
+          min: null
+          name: config_options
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        params:
+          config_options: ''
+          db_uri: ''
+          format: ''
+          query: ''
+        provider_id: hjlarry/database/database
+        provider_name: hjlarry/database/database
+        provider_type: builtin
+        retry_config:
+          max_retries: 3
+          retry_enabled: false
+          retry_interval: 1000
+        selected: false
+        title: '第二次-SQL 语句查询获取数据 '
+        tool_configurations:
+          config_options:
+            type: constant
+            value: null
+          format:
+            type: constant
+            value: md
+        tool_description: 此工具用于在已存在的数据库中执行 SQL 查询。
+        tool_label: SQL Execute
+        tool_name: sql_execute
+        tool_node_version: '2'
+        tool_parameters:
+          db_uri:
+            type: mixed
+            value: '{{#conversation.db_url_new#}}'
+          query:
+            type: mixed
+            value: '{{#1759047065164.structured_output.sql#}}'
+        type: tool
+      height: 150
+      id: '17590471368830'
+      position:
+        x: 3438.84285584838
+        y: 164.57675177980394
+      positionAbsolute:
+        x: 3438.84285584838
+        y: 164.57675177980394
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - '1750061971446'
+          - text
+          variable_selector:
+          - conversation
+          - sql_text
+          write_mode: over-write
+        selected: false
+        title: 首次-sql 查询结果
+        type: assigner
+        version: '2'
+      height: 84
+      id: '1759047894168'
+      position:
+        x: 3685.9726705823273
+        y: 562
+      positionAbsolute:
+        x: 3685.9726705823273
+        y: 562
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - '17590471368830'
+          - text
+          variable_selector:
+          - conversation
+          - sql_text
+          write_mode: over-write
+        selected: false
+        title: 第二次-sql 查询结果
+        type: assigner
+        version: '2'
+      height: 84
+      id: '17590479790740'
+      position:
+        x: 3730.870185266053
+        y: 408
+      positionAbsolute:
+        x: 3730.870185266053
+        y: 408
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - QSv/w06RTgGChcIZHU83xR65POuANuBvoAjccapIMzTWNcM8k6/yxbTyxIktAlbZ
+        - Qd1NGuL6NFlcVNcGahHOIqIsLkPAZfSLvTZsMU9LycJpqt7vQMu8F1blR36oxgff
+        - yZ24lz7GYIaCot7UCabQkUqPR8UJMIbBPJKzTsT3nCD/xfMbgiM6q3qjrj4Do2zj
+        desc: ''
+        metadata_filtering_mode: disabled
+        metadata_model_config:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: DeepSeek-v3
+          provider: langgenius/volcengine_maas/volcengine_maas
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: netease-youdao/bce-reranker-base_v1
+            provider: langgenius/siliconflow/siliconflow
+          score_threshold: null
+          top_k: 3
+          weights:
+            keyword_setting:
+              keyword_weight: 0.7
+            vector_setting:
+              embedding_model_name: netease-youdao/bce-embedding-base_v1
+              embedding_provider_name: langgenius/siliconflow/siliconflow
+              vector_weight: 0.3
+        query_attachment_selector: []
+        query_variable_selector:
+        - '1749806730190'
+        - sys.query
+        retrieval_mode: multiple
+        selected: false
+        title: 知识检索-字段标准查询名检索
+        type: knowledge-retrieval
+      height: 146
+      id: '1759763716020'
+      position:
+        x: 1850
+        y: 276
+      positionAbsolute:
+        x: 1850
+        y: 276
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "def main(arg1: dict) -> dict:\n    return {\n        \"result\": [item[\"\
+          content\"] for item in arg1]\n    }"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: array[string]
+        selected: false
+        title: 提取标准查询信息
+        type: code
+        variables:
+        - value_selector:
+          - '1759763716020'
+          - result
+          variable: arg1
+      height: 52
+      id: '1759763949300'
+      position:
+        x: 2154
+        y: 276
+      positionAbsolute:
+        x: 2154
+        y: 276
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "def main(arg1: dict) -> dict:\n    return {\n        \"result\": [item[\"\
+          content\"] for item in arg1]\n    }"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: array[string]
+        selected: false
+        title: N2SQL标准查询信息
+        type: code
+        variables:
+        - value_selector:
+          - '1750061257586'
+          - result
+          variable: arg1
+      height: 52
+      id: '17599905293840'
+      position:
+        x: 1850
+        y: 427
+      positionAbsolute:
+        x: 1850
+        y: 427
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: 032a52d0-4f23-4006-aae9-a577e6781769
+            value: 同比
+            varType: string
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: e41792a1-5c40-4b53-a9ab-64c57d1db0ab
+            value: 环比
+            varType: string
+            variable_selector:
+            - sys
+            - query
+          id: 'true'
+          logical_operator: or
+        desc: ''
+        selected: false
+        title: 意图识别
+        type: if-else
+      height: 150
+      id: '1759996026475'
+      position:
+        x: 1242
+        y: 408
+      positionAbsolute:
+        x: 1242
+        y: 408
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - W/O7yvm/aKwqLToGzry97s+L4eTgmQyTFOG2FbQWeJ5/x3qJ2HxWgiX7xAewc54N
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: netease-youdao/bce-reranker-base_v1
+            provider: langgenius/siliconflow/siliconflow
+          score_threshold: null
+          top_k: 10
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: BAAI/bge-m3
+              embedding_provider_name: langgenius/siliconflow/siliconflow
+              vector_weight: 0.7
+        query_attachment_selector: []
+        query_variable_selector:
+        - sys
+        - query
+        retrieval_mode: multiple
+        selected: false
+        title: 知识检索-同环比
+        type: knowledge-retrieval
+      height: 90
+      id: '17599971579940'
+      position:
+        x: 1546
+        y: 540
+      positionAbsolute:
+        x: 1546
+        y: 540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "def main(arg1: dict) -> dict:\n    return {\n        \"result\": [item[\"\
+          content\"] for item in arg1]\n    }"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: array[string]
+        selected: false
+        title: N2SQL-同环比
+        type: code
+        variables:
+        - value_selector:
+          - '17599971579940'
+          - result
+          variable: arg1
+      height: 52
+      id: '17599971637430'
+      position:
+        x: 1850
+        y: 559
+      positionAbsolute:
+        x: 1850
+        y: 559
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        output_type: array[string]
+        selected: false
+        title: N2SQL
+        type: variable-aggregator
+        variables:
+        - - '17599905293840'
+          - result
+        - - '17599971637430'
+          - result
+      height: 134
+      id: '1759997234093'
+      position:
+        x: 2154
+        y: 370
+      positionAbsolute:
+        x: 2154
+        y: 370
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '
+
+          {{#conversation.sql_text#}}
+
+
+          当前数据查询为空，请更换问题查询。
+
+          '
+        desc: ''
+        selected: false
+        title: 数据查询完成 (3)
+        type: answer
+        variables: []
+      height: 119
+      id: '17736398437950'
+      position:
+        x: 4432.669732650095
+        y: 434.03353811399205
+      positionAbsolute:
+        x: 4432.669732650095
+        y: 434.03353811399205
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: DeepSeek-V3.1
+          provider: langgenius/volcengine_maas/volcengine_maas
+        prompt_template:
+        - id: 93d49237-8bdf-44f0-8cdd-8fc4e26a777c
+          role: system
+          text: '根据{{#sys.query#}}，判断用户目的。如果用户目的是查询数据相关的，problem_type=1，如果用户目的是闲聊，problem_type=2。
+
+            参考示例： {{#conversation.intent_examples#}}
+
+            # 要求1：一定要输出一个problem_type值
+
+            # 要求2：输出problem_type对应的置信度problem_alpha
+
+            # 要求3：输出为标准的json'
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              problem_alpha:
+                description: 用户意图类型置信度
+                type: string
+              problem_type:
+                description: 用户意图类型
+                type: string
+            required:
+            - problem_type
+            - problem_alpha
+            type: object
+        structured_output_enabled: true
+        title: 意图识别
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1778050160251'
+      position:
+        x: -113.3031604728387
+        y: 297
+      positionAbsolute:
+        x: -113.3031604728387
+        y: 297
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: bb15ee66-9c93-4dc3-8825-3201c5d152f0
+            value: '1'
+            varType: string
+            variable_selector:
+            - '1778050160251'
+            - structured_output
+            - problem_type
+          id: 'true'
+          logical_operator: and
+        - case_id: f7978b08-ddf3-4096-a5ba-0862ee0da148
+          conditions:
+          - comparison_operator: is
+            id: 83036c5e-9934-46af-89dd-5dbc89f7e581
+            value: '2'
+            varType: object
+            variable_selector:
+            - '1778050160251'
+            - structured_output
+            - problem_type
+          logical_operator: and
+        selected: false
+        title: 意图分支
+        type: if-else
+      height: 172
+      id: '1778050404495'
+      position:
+        x: 187.6968395271613
+        y: 297
+      positionAbsolute:
+        x: 187.6968395271613
+        y: 297
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: DeepSeek-V3.1
+          provider: langgenius/volcengine_maas/volcengine_maas
+        prompt_template:
+        - id: 78211b1a-f7e7-48e8-8c68-60969c6c4ff3
+          role: system
+          text: 你是专注于汽车领域的专业知识闲聊机器人，人设定位为 "具备系统知识体系、逻辑严谨、表达专业" 的汽车行业专家，核心职责是围绕汽车相关话题，以专业视角解答疑问、输出准确信息，同时维持适度互动性，确保对话既专业严谨又不失交流属性。
+        selected: false
+        title: 闲聊节点
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1778050526473'
+      position:
+        x: 526.3484766575904
+        y: 513.8259039062293
+      positionAbsolute:
+        x: 526.3484766575904
+        y: 513.8259039062293
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#1778050526473.text#}}'
+        selected: false
+        title: 闲聊回复
+        type: answer
+        variables: []
+      height: 102
+      id: '1778050604826'
+      position:
+        x: 827.3484766575904
+        y: 513.8259039062293
+      positionAbsolute:
+        x: 827.3484766575904
+        y: 513.8259039062293
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: -2635.0994448955935
+      y: 37.93713329433251
+      zoom: 0.6388898985835599
+  rag_pipeline_variables: []
