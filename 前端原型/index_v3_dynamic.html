@@ -18,6 +18,10 @@
         :root {
             --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
             --font-display: 'Outfit', var(--font-primary);
+            --workspace-top: 20px;
+            --workspace-right: 20px;
+            --workspace-width: 920px;
+            --workspace-height: 700px;
             
             /* 高级轻量商业调色盘 (简洁白) */
             --bg-base: #f4f7fb;
@@ -1225,6 +1229,7 @@
             flex-direction: column;
             padding: 24px;
             overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
             transition: all 0.35s ease;
         }
@@ -1248,6 +1253,7 @@
         .canvas-controls {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
         .canvas-btn {
             background: #ffffff;
@@ -1263,6 +1269,9 @@
             align-items: center;
             gap: 6px;
             transition: all 0.2s;
+        }
+        .canvas-btn i {
+            font-size: 12px;
         }
         .canvas-btn img {
             width: 14px;
@@ -1298,16 +1307,24 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+            min-width: 0;
         }
         .canvas-header h2 {
             font-family: var(--font-primary);
             font-size: 16px;
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .canvas-subtitle {
             font-size: 11px;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 360px;
         }
 
         /* 动态卡片容器 */
@@ -1318,6 +1335,7 @@
             flex-direction: column;
             gap: 12px;
             padding-bottom: 20px;
+            overflow-x: hidden;
         }
 
         /* 空白状态 */
@@ -1669,26 +1687,32 @@
             color: var(--text-primary);
         }
 
-        /* 卡片池侧边栏 */
+        /* 卡片历史 / 可访问数据统一侧边浮层 */
         .card-pool-drawer {
             position: fixed;
-            bottom: 116px;
-            left: -280px;
-            width: 260px;
-            height: 400px;
+            top: var(--workspace-top);
+            right: var(--workspace-right);
+            width: min(360px, calc(var(--workspace-width) * 0.42));
+            height: var(--workspace-height);
             background: #ffffff;
-            border-right: 1px solid var(--border-light);
-            border-radius: 16px 16px 0 0;
-            box-shadow: 10px 0 30px rgba(15, 23, 42, 0.08);
-            z-index: 999;
+            border: 1px solid var(--border-light);
+            border-radius: 18px;
+            box-shadow: -12px 16px 36px rgba(15, 23, 42, 0.12);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
-            transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateX(calc(100% + 20px));
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
         }
         .card-pool-drawer.active {
-            left: 32px;
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
         }
-        .card-pool-header {
+        .card-pool-header,
+        .catalog-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1697,6 +1721,9 @@
             font-size: 12px;
             font-weight: 700;
             color: var(--text-primary);
+        }
+        .catalog-header {
+            padding: 0 0 12px;
         }
         .card-pool-header span {
             display: flex;
@@ -1751,44 +1778,196 @@
             padding: 0;
             overflow: hidden;
         }
+        #workspace-container.report-focus .chat-pane {
+            width: 0;
+            min-width: 0;
+            opacity: 0;
+            overflow: hidden;
+            border-right: none;
+        }
+        #workspace-container.report-focus .bi-canvas {
+            flex: 1 1 100%;
+        }
+        #workspace-container.report-focus .canvas-subtitle {
+            max-width: 520px;
+        }
+        #workspace-container:not(.fullscreen-state) .canvas-controls {
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        #workspace-container:not(.fullscreen-state) .canvas-btn {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 9px;
+            font-size: 0;
+            gap: 0;
+        }
+        #workspace-container:not(.fullscreen-state) .canvas-btn i {
+            font-size: 12px;
+            margin: 0;
+        }
+        #workspace-container:not(.fullscreen-state) .canvas-btn.primary {
+            width: 38px;
+        }
+        #workspace-container.fullscreen-state .canvas-btn span {
+            display: inline;
+        }
 
-        /* 数据字典 */
+        /* 当前账号可访问数据 */
         .catalog-drawer {
             position: fixed;
-            top: 20px;
-            right: -320px;
-            width: 320px;
-            height: calc(100vh - 40px);
+            top: var(--workspace-top);
+            right: var(--workspace-right);
+            width: min(360px, calc(var(--workspace-width) * 0.42));
+            height: var(--workspace-height);
             background: #ffffff;
             border-left: 1px solid var(--border-light);
-            border-radius: 20px 0 0 20px;
-            box-shadow: -10px 0 30px rgba(15,23,42,0.06);
+            border-radius: 18px;
+            box-shadow: -16px 22px 46px rgba(15,23,42,0.14);
             z-index: 1000;
-            padding: 24px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 14px;
+            transform: translateX(calc(100% + 20px));
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
         }
         .catalog-drawer.active {
-            right: 20px;
-        }
-        .catalog-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
         }
         .catalog-header h3 {
             font-family: var(--font-primary);
             font-size: 15px;
             font-weight: 700;
         }
+        .catalog-summary {
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+        .catalog-section-title {
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 800;
+            margin: 4px 0 -4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
         .catalog-list {
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
+            padding-right: 2px;
+        }
+        .catalog-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+        .catalog-filter i {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+        .catalog-filter input {
+            border: none;
+            outline: none;
+            background: transparent;
+            flex: 1;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+        .data-domain-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .data-domain-card summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .data-domain-card summary::-webkit-details-marker {
+            display: none;
+        }
+        .data-domain-title {
+            min-width: 0;
+        }
+        .data-domain-title strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .data-domain-title span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 10.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .data-domain-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .data-domain-meta .catalog-item-type {
+            margin: 0;
+        }
+        .field-list {
+            border-top: 1px solid #eef2f7;
+            padding: 8px 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: start;
+            padding: 8px;
+            border-radius: 9px;
+            background: #f8fafc;
+        }
+        .field-row.hidden,
+        .data-domain-card.hidden {
+            display: none;
+        }
+        .field-name {
+            font-family: Consolas, monospace;
+            color: var(--electric-blue);
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+        .field-desc {
+            color: var(--text-secondary);
+            font-size: 10.8px;
+            line-height: 1.35;
         }
         .catalog-item {
             background: #fafbfc;
@@ -1815,6 +1994,39 @@
             padding: 1px 4px;
             border-radius: 3px;
             display: inline-block;
+        }
+        .view-mode-hint {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 14px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .business-summary-card {
+            background: linear-gradient(135deg, #f8fafd 0%, #eef6ff 100%);
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            padding: 14px;
+        }
+        .business-summary-card h4 {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .business-summary-card p {
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .debug-note {
+            background: #0f172a;
+            color: #dbeafe;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 11px;
+            line-height: 1.45;
         }
 
         /* 动效 */
@@ -1877,11 +2089,37 @@
             }
             .canvas-controls {
                 gap: 6px;
-                flex-wrap: wrap;
                 justify-content: flex-end;
+                flex-wrap: nowrap;
             }
             .canvas-btn {
-                padding: 7px 10px;
+                width: 34px;
+                height: 34px;
+                padding: 0;
+                justify-content: center;
+                border-radius: 9px;
+                font-size: 0;
+                gap: 0;
+            }
+            .canvas-btn i {
+                font-size: 12px;
+                margin: 0;
+            }
+            .canvas-btn.primary {
+                width: 38px;
+            }
+            .canvas-subtitle {
+                max-width: 220px;
+            }
+            .card-pool-drawer {
+                top: var(--workspace-top);
+                right: var(--workspace-right);
+                height: var(--workspace-height);
+                width: min(320px, calc(var(--workspace-width) * 0.5));
+            }
+            .catalog-drawer {
+                width: min(320px, calc(var(--workspace-width) * 0.5));
+                padding: 14px;
             }
             .kpi-grid-card {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1944,38 +2182,82 @@
         <span id="notification-text">明细数据报表下载成功！</span>
     </div>
 
-    <!-- 3. 数据字典隐藏侧边栏 (Data Catalog Drawer) -->
+    <!-- 3. 用户当前可访问数据侧边栏 -->
     <div id="catalog-drawer" class="catalog-drawer">
         <div class="catalog-header">
-            <h3><i class="fa-solid fa-book-sparkles"></i> 数据字典 (Data Catalog)</h3>
+            <h3><i class="fa-solid fa-database"></i> 可访问数据</h3>
             <button class="header-btn" onclick="toggleCatalog()"><i class="fa-solid fa-xmark" style="font-size: 13px;"></i></button>
         </div>
+        <div class="catalog-summary">
+            当前账号：中东公司总经理。这里展示已授权的数据资产，支持按表名、字段名、指标和业务含义快速检索。
+        </div>
+        <div class="catalog-filter">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="搜索表、字段、维度、指标..." oninput="filterAccessibleData(this.value)">
+        </div>
         <div class="catalog-list">
+            <div class="catalog-section-title"><i class="fa-solid fa-scale-balanced"></i> 关键口径</div>
             <div class="catalog-item">
-                <div class="catalog-item-name">area_name</div>
-                <div class="catalog-item-desc">目标大区或子公司名称</div>
-                <div class="catalog-item-type">VARCHAR(100) | 维度</div>
+                <div class="catalog-item-name">turnover_days</div>
+                <div class="catalog-item-desc">库存周转天数 = (在店库存 + 在途库存) / (近30日日均零售)。安全线上限：30天。</div>
+                <div class="catalog-item-type">派生指标 | 可审计口径</div>
             </div>
-            <div class="catalog-item">
-                <div class="catalog-item-name">model_name</div>
-                <div class="catalog-item-desc">车辆车型名称，如 GS8, EMZOOM</div>
-                <div class="catalog-item-type">VARCHAR(100) | 维度</div>
-            </div>
-            <div class="catalog-item">
-                <div class="catalog-item-name">stock_qty</div>
-                <div class="catalog-item-desc">总库存天数分母量 (在店库存)</div>
-                <div class="catalog-item-type">BIGINT | 指标</div>
-            </div>
-            <div class="catalog-item">
-                <div class="catalog-item-name">dlr_onway_qty</div>
-                <div class="catalog-item-desc">经销商在途库存量</div>
-                <div class="catalog-item-type">BIGINT | 指标</div>
-            </div>
-            <div class="catalog-item">
-                <div class="catalog-item-name">period_td</div>
-                <div class="catalog-item-desc">统计月份，格式 YYYY-MM</div>
-                <div class="catalog-item-type">VARCHAR(100) | 时间维度</div>
-            </div>
+            <div class="catalog-section-title"><i class="fa-solid fa-table"></i> 可访问表与字段</div>
+            <details class="data-domain-card" open data-search="产销存 库存 周转 v_dm_sal_stock_dly area_name model_name period_td stock_qty dlr_onway_qty retail_qty turnover_days">
+                <summary>
+                    <div class="data-domain-title">
+                        <strong>v_dm_sal_stock_dly</strong>
+                        <span>车型库存、在途、零售与周转天数日表</span>
+                    </div>
+                    <div class="data-domain-meta">
+                        <span class="catalog-item-type">库存域</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </summary>
+                <div class="field-list">
+                    <div class="field-row" data-search="area_name 大区 子公司 维度"><div><div class="field-name">area_name</div><div class="field-desc">大区或子公司名称，当前默认过滤为中东公司。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="model_name 车型 GS8 EMZOOM EMKOO EMPOW 维度"><div><div class="field-name">model_name</div><div class="field-desc">车型名称，可用于车型级库存和动销分析。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="period_td 月份 时间 YYYY-MM"><div><div class="field-name">period_td</div><div class="field-desc">统计月份，格式 YYYY-MM。</div></div><span class="catalog-item-type">时间</span></div>
+                    <div class="field-row" data-search="stock_qty 在店库存 库存 指标"><div><div class="field-name">stock_qty</div><div class="field-desc">在店库存数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="dlr_onway_qty 经销商在途 在途库存 指标"><div><div class="field-name">dlr_onway_qty</div><div class="field-desc">经销商在途库存数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="retail_qty 零售 终端零售 指标"><div><div class="field-name">retail_qty</div><div class="field-desc">终端零售数量，用于动销与周转计算。</div></div><span class="catalog-item-type">指标</span></div>
+                </div>
+            </details>
+            <details class="data-domain-card" data-search="排产 到货 剪刀差 v_dm_sal_prod_arrival_m plan_qty arrival_qty retail_qty gap_qty">
+                <summary>
+                    <div class="data-domain-title">
+                        <strong>v_dm_sal_prod_arrival_m</strong>
+                        <span>排产计划、实际到货、零售剪刀差月表</span>
+                    </div>
+                    <div class="data-domain-meta">
+                        <span class="catalog-item-type">物流域</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </summary>
+                <div class="field-list">
+                    <div class="field-row" data-search="plan_qty 排产 计划 指标"><div><div class="field-name">plan_qty</div><div class="field-desc">月度排产计划数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="arrival_qty 到货 实际到货 指标"><div><div class="field-name">arrival_qty</div><div class="field-desc">实际到货入库数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="retail_qty 零售 终端零售 指标"><div><div class="field-name">retail_qty</div><div class="field-desc">同月终端零售数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="gap_qty 剪刀差 到货零售差异 派生指标"><div><div class="field-name">gap_qty</div><div class="field-desc">到货量 - 零售量，大于 500 进入预警。</div></div><span class="catalog-item-type">派生</span></div>
+                </div>
+            </details>
+            <details class="data-domain-card" data-search="经销商 渠道 国家 dealer country city dlr_name">
+                <summary>
+                    <div class="data-domain-title">
+                        <strong>dim_oversea_dealer</strong>
+                        <span>海外经销商、国家、城市与渠道层级维表</span>
+                    </div>
+                    <div class="data-domain-meta">
+                        <span class="catalog-item-type">维表</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </summary>
+                <div class="field-list">
+                    <div class="field-row" data-search="country_name 国家 维度"><div><div class="field-name">country_name</div><div class="field-desc">国家名称，用于国家级下钻。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="city_name 城市 维度"><div><div class="field-name">city_name</div><div class="field-desc">城市名称，用于网点地域分析。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="dlr_name 经销商 网点 维度"><div><div class="field-name">dlr_name</div><div class="field-desc">经销商或网点名称。</div></div><span class="catalog-item-type">维度</span></div>
+                </div>
+            </details>
         </div>
     </div>
 
@@ -2112,12 +2394,12 @@
                 </div>
                 <div class="canvas-controls">
                     <!-- 折叠/展开按钮 -->
-                    <button class="canvas-btn" id="collapse-btn" onclick="toggleCanvasCollapse()" title="折叠/展开看板">
-                        <i class="fa-solid fa-chevron-right" id="collapse-icon"></i>
+                    <button class="canvas-btn" id="collapse-btn" onclick="toggleCanvasCollapse()" title="专注报告 / 展开审计链">
+                        <i class="fa-solid fa-chevron-left" id="collapse-icon"></i>
                     </button>
-                    <button class="canvas-btn" onclick="toggleCardPool()"><i class="fa-solid fa-layer-group"></i> 卡片历史</button>
-                    <button class="canvas-btn" onclick="toggleCatalog()"><i class="fa-solid fa-book"></i> 数据字典</button>
-                    <button class="canvas-btn primary" onclick="exportCurrentCards()"><i class="fa-solid fa-download"></i> 导出</button>
+                    <button class="canvas-btn" onclick="toggleCardPool()" title="卡片历史"><i class="fa-solid fa-layer-group"></i><span>卡片历史</span></button>
+                    <button class="canvas-btn" onclick="toggleCatalog()" title="可访问数据"><i class="fa-solid fa-database"></i><span>可访问数据</span></button>
+                    <button class="canvas-btn primary" onclick="exportCurrentCards()" title="导出"><i class="fa-solid fa-download"></i><span>导出</span></button>
                 </div>
             </div>
 
@@ -2242,6 +2524,7 @@
         let currentCards = []; // 当前显示的卡片
         let isCanvasCollapsed = false;
         let isCardPoolOpen = false;
+        let isReportFocused = false;
 
         // 根据用户问题判断意图类型
         function detectIntent(userInput) {
@@ -2624,6 +2907,7 @@
         function renderCards(cards, options = {}) {
             const container = document.getElementById('cards-container');
             if (!container) return;
+            updateWorkspaceMetrics();
 
             if (!cards || cards.length === 0) {
                 showCardsEmptyState(container);
@@ -2694,6 +2978,9 @@
                     if (index === cards.length - 1) {
                         currentCards = cards;
                         addToCardPool(cards);
+                        if (shouldAutoFocusReport()) {
+                            setReportFocus(true);
+                        }
                     }
                 }, 360 + index * 360);
                 cardAnimationTimers.push(timer);
@@ -2721,7 +3008,7 @@
                     option = {
                         backgroundColor: 'transparent',
                         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                        grid: { top: '10%', left: '5%', right: '5%', bottom: '15%' },
+                        grid: { top: '10%', left: 10, right: 10, bottom: '15%', containLabel: true },
                         xAxis: { type: 'category', data: ['GS8', 'EMZOOM', 'EMKOO', 'EMPOW'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
                         yAxis: { type: 'value', name: '天数', axisLine: { lineStyle: { color: '#cbd5e1' } } },
                         series: [{
@@ -2742,7 +3029,7 @@
                         backgroundColor: 'transparent',
                         tooltip: { trigger: 'axis' },
                         legend: { data: ['到货量', '零售量'], bottom: '0%', textStyle: { color: '#4c5667' } },
-                        grid: { top: '10%', left: '8%', right: '5%', bottom: '18%' },
+                        grid: { top: '10%', left: 10, right: 10, bottom: '18%', containLabel: true },
                         xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
                         yAxis: { type: 'value', name: '辆', axisLine: { lineStyle: { color: '#cbd5e1' } } },
                         series: [
@@ -2756,7 +3043,7 @@
                     option = {
                         backgroundColor: 'transparent',
                         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                        grid: { top: '10%', left: '8%', right: '5%', bottom: '15%' },
+                        grid: { top: '10%', left: 10, right: 10, bottom: '15%', containLabel: true },
                         xAxis: { type: 'category', data: ['GS8', 'EMZOOM', 'EMKOO', 'EMPOW'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
                         yAxis: { type: 'value', name: '天数', axisLine: { lineStyle: { color: '#cbd5e1' } } },
                         series: [{
@@ -2823,25 +3110,46 @@
             updateCanvasTitle('历史卡片: ' + item.title);
         }
 
-        // 切换看板折叠
-        function toggleCanvasCollapse() {
-            const canvas = document.getElementById('bi-canvas');
+        function setReportFocus(focused) {
             const icon = document.getElementById('collapse-icon');
-
-            isCanvasCollapsed = !isCanvasCollapsed;
-
-            if (isCanvasCollapsed) {
-                canvas.classList.add('collapsed');
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                canvas.classList.remove('collapsed');
-                icon.style.transform = 'rotate(0deg)';
+            isReportFocused = focused;
+            workspace.classList.toggle('report-focus', focused);
+            if (icon) {
+                icon.className = focused ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
             }
+            setTimeout(() => {
+                document.querySelectorAll('.chart-container').forEach(chartDom => {
+                    const instance = typeof echarts !== 'undefined' ? echarts.getInstanceByDom(chartDom) : null;
+                    if (instance) instance.resize();
+                });
+            }, 360);
+        }
+
+        function updateWorkspaceMetrics() {
+            const rect = workspace.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            const root = document.documentElement;
+            root.style.setProperty('--workspace-top', rect.top + 'px');
+            root.style.setProperty('--workspace-right', (window.innerWidth - rect.right) + 'px');
+            root.style.setProperty('--workspace-width', rect.width + 'px');
+            root.style.setProperty('--workspace-height', rect.height + 'px');
+        }
+
+        function shouldAutoFocusReport() {
+            if (isFullscreen) return false;
+            return workspace.getBoundingClientRect().width <= 980;
+        }
+
+        // 小窗态结果优先：收起/展开左侧审计链
+        function toggleCanvasCollapse() {
+            setReportFocus(!isReportFocused);
         }
 
         // 切换卡片池
         function toggleCardPool() {
             const drawer = document.getElementById('card-pool-drawer');
+            updateWorkspaceMetrics();
+            catalogDrawer.classList.remove('active');
             isCardPoolOpen = !isCardPoolOpen;
 
             if (isCardPoolOpen) {
@@ -3031,11 +3339,43 @@
         }
 
         function getAuditWelcomeHtml() {
-            const existingWelcome = document.getElementById('welcome-bubble');
-            return existingWelcome ? existingWelcome.outerHTML : `
+            return `
                 <div class="audit-welcome" id="welcome-bubble">
-                    <h3><i class="fa-solid fa-route"></i> 从这里开始问数</h3>
-                    <p>左侧用于审计执行链，右侧用于查看业务答案。</p>
+                    <h3><i class="fa-solid fa-route" style="color: var(--electric-blue);"></i> 从这里开始问数</h3>
+                    <p>左侧记录每次问数的执行链路，点击任一节点即可查看输入参数、输出参数、SQL、工具调用、耗时与修复记录；右侧只保留业务用户需要消费的答案和图表。</p>
+                    <div class="audit-principles">
+                        <div class="audit-principle">
+                            <strong>可追溯</strong>
+                            <span>每个指标都能回到口径、字段、SQL 与数据源。</span>
+                        </div>
+                        <div class="audit-principle">
+                            <strong>可复核</strong>
+                            <span>节点输入输出结构化展示，便于数据团队审查。</span>
+                        </div>
+                        <div class="audit-principle">
+                            <strong>结果清爽</strong>
+                            <span>右侧只呈现结论、图表、明细和行动建议。</span>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-list">
+                        <div class="recommend-btn" onclick="selectQuestion('诊断中东公司 GS8 车型本月的库存异常并给出建议')">
+                            <span><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--alert-orange); margin-right: 6px;"></i>诊断中东公司 GS8 本月库存周转天数异常</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="recommend-btn" onclick="selectQuestion('分析本月中东公司车型排产与实际到货差额')">
+                            <span><i class="fa-solid fa-chart-line" style="color: var(--aurora-green); margin-right: 6px;"></i>分析本月中东车型排产与实际到货剪刀差</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="recommend-btn" onclick="selectQuestion('GS8 当前库存是多少，是否超过安全线')">
+                            <span><i class="fa-solid fa-gauge-high" style="color: var(--electric-blue); margin-right: 6px;"></i>查询 GS8 当前库存与安全线</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="recommend-btn" onclick="selectQuestion('什么是库存周转天数，计算公式是什么')">
+                            <span><i class="fa-solid fa-book" style="color: var(--text-muted); margin-right: 6px;"></i>解释库存周转天数指标口径</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -3428,7 +3768,19 @@
         let dragStartX, dragStartY;
         let originalLeft, originalTop;
 
+        function clampLauncherPosition(left, top) {
+            const margin = 8;
+            const rect = launcher.getBoundingClientRect();
+            const launcherWidth = rect.width || 68;
+            const launcherHeight = rect.height || 68;
+            return {
+                left: Math.max(margin, Math.min(window.innerWidth - launcherWidth - margin, left)),
+                top: Math.max(margin, Math.min(window.innerHeight - launcherHeight - margin, top))
+            };
+        }
+
         launcher.addEventListener('mousedown', function(e) {
+            e.preventDefault();
             isDragging = true;
             hasDragged = false;
             dragStartX = e.clientX;
@@ -3451,8 +3803,9 @@
             if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
                 hasDragged = true;
             }
-            launcher.style.left = (originalLeft + dx) + 'px';
-            launcher.style.top = (originalTop + dy) + 'px';
+            const next = clampLauncherPosition(originalLeft + dx, originalTop + dy);
+            launcher.style.left = next.left + 'px';
+            launcher.style.top = next.top + 'px';
             launcher.style.bottom = 'auto';
             launcher.style.right = 'auto';
         });
@@ -3460,15 +3813,13 @@
         document.addEventListener('mouseup', function(e) {
             if (!isDragging) return;
             isDragging = false;
-            launcher.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            launcher.style.transition = 'transform 0.28s ease, box-shadow 0.28s ease, border-radius 0.28s ease';
             const rect = launcher.getBoundingClientRect();
-            const width = window.innerWidth;
-            if (rect.left + 34 > width / 2) {
-                launcher.style.left = (width - 98) + 'px';
-            } else {
-                launcher.style.left = '32px';
-            }
-            // 拖拽结束后更新位置供点击检测使用
+            const next = clampLauncherPosition(rect.left, rect.top);
+            launcher.style.left = next.left + 'px';
+            launcher.style.top = next.top + 'px';
+            launcher.style.bottom = 'auto';
+            launcher.style.right = 'auto';
             dragStartX = e.clientX;
             dragStartY = e.clientY;
         });
@@ -3479,6 +3830,7 @@
         function toggleWorkspace(e) {
             // 如果刚刚发生了拖拽，则不触发点击打开/关闭工作区
             if (hasDragged) {
+                hasDragged = false;
                 return;
             }
             
@@ -3488,6 +3840,7 @@
                 setTimeout(() => {
                     workspace.style.opacity = '1';
                     workspace.style.transform = 'scale(1)';
+                    updateWorkspaceMetrics();
                     clearCards(); // 清空旧卡片，等待用户新问题
                 }, 10);
             } else {
@@ -3512,8 +3865,10 @@
             if (isFullscreen) {
                 workspace.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
                 workspace.classList.add('fullscreen-state');
+                setReportFocus(false);
                 fullscreenIcon.className = 'fa-solid fa-compress';
                 setTimeout(() => {
+                    updateWorkspaceMetrics();
                     // 全屏时重新渲染当前卡片
                     if (currentCards.length > 0) {
                         renderCards(currentCards, { skipPool: true });
@@ -3524,11 +3879,41 @@
                 fullscreenIcon.className = 'fa-solid fa-expand';
                 catalogDrawer.classList.remove('active');
                 closeHistoryDrawer();
+                if (shouldAutoFocusReport() && currentCards.length > 0) {
+                    setReportFocus(true);
+                }
+                setTimeout(updateWorkspaceMetrics, 520);
             }
         }
 
         function toggleCatalog() {
+            updateWorkspaceMetrics();
+            const cardPoolDrawer = document.getElementById('card-pool-drawer');
+            if (cardPoolDrawer) {
+                cardPoolDrawer.classList.remove('active');
+                isCardPoolOpen = false;
+            }
             catalogDrawer.classList.toggle('active');
+        }
+
+        function filterAccessibleData(keyword) {
+            const query = keyword.trim().toLowerCase();
+            document.querySelectorAll('.data-domain-card').forEach(card => {
+                const domainText = (card.dataset.search || card.textContent || '').toLowerCase();
+                let hasVisibleField = false;
+
+                card.querySelectorAll('.field-row').forEach(row => {
+                    const rowText = (row.dataset.search || row.textContent || '').toLowerCase();
+                    const matched = !query || domainText.includes(query) || rowText.includes(query);
+                    row.classList.toggle('hidden', !matched);
+                    hasVisibleField = hasVisibleField || matched;
+                });
+
+                card.classList.toggle('hidden', !!query && !domainText.includes(query) && !hasVisibleField);
+                if (query && hasVisibleField) {
+                    card.open = true;
+                }
+            });
         }
 
         function toggleHistoryDrawer(e) {
@@ -3606,6 +3991,37 @@
             sendUserMessage();
         }
 
+        function createChatReply(query) {
+            if (/谢谢|多谢|辛苦/.test(query)) {
+                return '不客气，我会继续按您当前账号可访问的数据范围来回答。您可以直接问库存、到货、排产、零售或指标口径。';
+            }
+            if (/你是谁|你能做什么|功能/.test(query)) {
+                return '我是广汽国际问数助手，可以帮您做产销存数据查询、库存异常诊断、排产到货差异分析，并把每次问数的口径、SQL、工具调用和结果卡片留痕。';
+            }
+            return '您好，我在。您可以直接问我业务数据问题，例如“诊断中东公司 GS8 库存异常”“分析排产与到货差额”，也可以先点右上角“可访问数据”看看当前账号能查询的维度和指标。';
+        }
+
+        function renderChatMessage(query) {
+            const welcome = document.getElementById('welcome-bubble');
+            if (welcome) welcome.remove();
+
+            const reply = createChatReply(query);
+            const userHtml = `
+                <div class="chat-bubble user">
+                    <div class="bubble-avatar"><img src="assets/user-avatar.png" alt="用户"></div>
+                    <div class="bubble-content">${escapeHtml(query)}</div>
+                </div>
+            `;
+            const botHtml = `
+                <div class="chat-bubble bot">
+                    <div class="bubble-avatar"><img src="assets/assistant-avatar.png" alt="AI"></div>
+                    <div class="bubble-content">${escapeHtml(reply)}</div>
+                </div>
+            `;
+            historyBox.insertAdjacentHTML('beforeend', userHtml + botHtml);
+            historyBox.scrollTop = historyBox.scrollHeight;
+        }
+
         function sendUserMessage() {
             const val = inputArea.value.trim();
             if (!val) return;
@@ -3617,6 +4033,23 @@
             handleInputState();
 
             const intent = detectIntent(val);
+            if (intent === IntentType.CHAT) {
+                setReportFocus(false);
+                renderChatMessage(val);
+                clearCards();
+                updateCanvasTitle('闲聊模式', '当前问题无需查询数据，右侧保持为空');
+
+                const activeSession = sessions.find(s => s.id === currentSessionId);
+                if (activeSession) {
+                    activeSession.title = val.substring(0, 18) + (val.length > 18 ? '...' : '');
+                    activeSession.chatHtml = historyBox.innerHTML;
+                    activeSession.hasCharts = false;
+                    activeSession.auditRun = null;
+                    renderHistoryDrawerList();
+                }
+                return;
+            }
+
             const auditRun = createAuditRun(val, intent);
             const cards = generateCardsByIntent(intent, val, '');
 
