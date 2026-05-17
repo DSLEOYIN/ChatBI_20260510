@@ -1053,26 +1053,6 @@
             max-height: 180px;
             overflow: auto;
         }
-        .view-mode-tabs {
-            display: flex;
-            gap: 6px;
-        }
-        .view-mode-tab {
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            color: var(--text-secondary);
-            border-radius: 8px;
-            padding: 5px 9px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .view-mode-tab.active {
-            background: #111111;
-            color: #ffffff;
-            border-color: #111111;
-        }
-
         /* 思维链发光卡片 */
         .thinking-card {
             background: rgba(245, 247, 250, 0.6);
@@ -1693,12 +1673,15 @@
             top: var(--workspace-top);
             right: var(--workspace-right);
             width: min(360px, calc(var(--workspace-width) * 0.42));
-            height: var(--workspace-height);
+            height: min(var(--workspace-height), calc(100vh - var(--workspace-top) - 16px));
+            max-height: calc(100vh - var(--workspace-top) - 16px);
             background: #ffffff;
             border: 1px solid var(--border-light);
             border-radius: 18px;
             box-shadow: -12px 16px 36px rgba(15, 23, 42, 0.12);
             z-index: 1000;
+            box-sizing: border-box;
+            padding: 0;
             display: flex;
             flex-direction: column;
             transform: translateX(calc(100% + 20px));
@@ -1821,12 +1804,14 @@
             top: var(--workspace-top);
             right: var(--workspace-right);
             width: min(360px, calc(var(--workspace-width) * 0.42));
-            height: var(--workspace-height);
+            height: min(var(--workspace-height), calc(100vh - var(--workspace-top) - 16px));
+            max-height: calc(100vh - var(--workspace-top) - 16px);
             background: #ffffff;
             border-left: 1px solid var(--border-light);
             border-radius: 18px;
             box-shadow: -16px 22px 46px rgba(15,23,42,0.14);
             z-index: 1000;
+            box-sizing: border-box;
             padding: 18px;
             display: flex;
             flex-direction: column;
@@ -1995,15 +1980,6 @@
             border-radius: 3px;
             display: inline-block;
         }
-        .view-mode-hint {
-            background: #ffffff;
-            border: 1px solid var(--border-light);
-            border-radius: 14px;
-            padding: 14px;
-            color: var(--text-secondary);
-            font-size: 12px;
-            line-height: 1.55;
-        }
         .business-summary-card {
             background: linear-gradient(135deg, #f8fafd 0%, #eef6ff 100%);
             border: 1px solid #dbeafe;
@@ -2160,9 +2136,6 @@
             .kpi-grid-card {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-            .view-mode-tabs {
-                display: none;
-            }
         }
     </style>
 </head>
@@ -2189,25 +2162,19 @@
             <button class="header-btn" onclick="toggleCatalog()"><i class="fa-solid fa-xmark" style="font-size: 13px;"></i></button>
         </div>
         <div class="catalog-summary">
-            当前账号：中东公司总经理。这里展示已授权的数据资产，支持按表名、字段名、指标和业务含义快速检索。
+            当前账号：中东公司总经理。这里展示已授权的数据资产，支持按英文表名、英文字段、中文名、业务别名和场景快速检索。
         </div>
         <div class="catalog-filter">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="搜索表、字段、维度、指标..." oninput="filterAccessibleData(this.value)">
         </div>
         <div class="catalog-list">
-            <div class="catalog-section-title"><i class="fa-solid fa-scale-balanced"></i> 关键口径</div>
-            <div class="catalog-item">
-                <div class="catalog-item-name">turnover_days</div>
-                <div class="catalog-item-desc">库存周转天数 = (在店库存 + 在途库存) / (近30日日均零售)。安全线上限：30天。</div>
-                <div class="catalog-item-type">派生指标 | 可审计口径</div>
-            </div>
-            <div class="catalog-section-title"><i class="fa-solid fa-table"></i> 可访问表与字段</div>
-            <details class="data-domain-card" open data-search="产销存 库存 周转 v_dm_sal_stock_dly area_name model_name period_td stock_qty dlr_onway_qty retail_qty turnover_days">
+            <div class="catalog-section-title"><i class="fa-solid fa-table"></i> 按业务场景分组的可访问表字段</div>
+            <details class="data-domain-card" open data-search="库存 场景 inventory stock 库存周转 v_dm_sal_stock_dly area_name area_cn model_code model_name period_td stat_date stock_qty dlr_onway_qty available_qty locked_qty retail_qty wholesale_qty turnover_days safety_days">
                 <summary>
                     <div class="data-domain-title">
                         <strong>v_dm_sal_stock_dly</strong>
-                        <span>车型库存、在途、零售与周转天数日表</span>
+                        <span>库存场景：车型库存、锁定、可售、零售与周转日表</span>
                     </div>
                     <div class="data-domain-meta">
                         <span class="catalog-item-type">库存域</span>
@@ -2215,19 +2182,25 @@
                     </div>
                 </summary>
                 <div class="field-list">
-                    <div class="field-row" data-search="area_name 大区 子公司 维度"><div><div class="field-name">area_name</div><div class="field-desc">大区或子公司名称，当前默认过滤为中东公司。</div></div><span class="catalog-item-type">维度</span></div>
-                    <div class="field-row" data-search="model_name 车型 GS8 EMZOOM EMKOO EMPOW 维度"><div><div class="field-name">model_name</div><div class="field-desc">车型名称，可用于车型级库存和动销分析。</div></div><span class="catalog-item-type">维度</span></div>
-                    <div class="field-row" data-search="period_td 月份 时间 YYYY-MM"><div><div class="field-name">period_td</div><div class="field-desc">统计月份，格式 YYYY-MM。</div></div><span class="catalog-item-type">时间</span></div>
-                    <div class="field-row" data-search="stock_qty 在店库存 库存 指标"><div><div class="field-name">stock_qty</div><div class="field-desc">在店库存数量。</div></div><span class="catalog-item-type">指标</span></div>
-                    <div class="field-row" data-search="dlr_onway_qty 经销商在途 在途库存 指标"><div><div class="field-name">dlr_onway_qty</div><div class="field-desc">经销商在途库存数量。</div></div><span class="catalog-item-type">指标</span></div>
-                    <div class="field-row" data-search="retail_qty 零售 终端零售 指标"><div><div class="field-name">retail_qty</div><div class="field-desc">终端零售数量，用于动销与周转计算。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="area_name 大区 子公司 区域 region"><div><div class="field-name">area_name / 区域名称</div><div class="field-desc">大区或子公司名称，当前默认过滤为中东公司。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="country_name 国家 country"><div><div class="field-name">country_name / 国家</div><div class="field-desc">库存归属国家，可用于国家下钻。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="model_code 车型编码 model code"><div><div class="field-name">model_code / 车型编码</div><div class="field-desc">车型编码，用于精确关联车型主数据。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="model_name 车型 车型名称 GS8 EMZOOM EMKOO EMPOW model"><div><div class="field-name">model_name / 车型名称</div><div class="field-desc">车型名称，可用于车型级库存和动销分析。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="period_td 月份 统计月份 period month"><div><div class="field-name">period_td / 统计月份</div><div class="field-desc">统计月份，格式 YYYY-MM。</div></div><span class="catalog-item-type">时间</span></div>
+                    <div class="field-row" data-search="stat_date 日期 统计日期 date"><div><div class="field-name">stat_date / 统计日期</div><div class="field-desc">日粒度统计日期。</div></div><span class="catalog-item-type">时间</span></div>
+                    <div class="field-row" data-search="stock_qty 在店库存 库存 stock inventory"><div><div class="field-name">stock_qty / 在店库存</div><div class="field-desc">经销商在店库存数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="dlr_onway_qty 经销商在途 在途库存 onway transit"><div><div class="field-name">dlr_onway_qty / 经销商在途</div><div class="field-desc">已发运但尚未到店的在途库存。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="available_qty 可售库存 可销售 available salable"><div><div class="field-name">available_qty / 可售库存</div><div class="field-desc">扣除锁定、质损、冻结后的可售车辆数。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="locked_qty 锁定库存 冻结库存 locked frozen"><div><div class="field-name">locked_qty / 锁定库存</div><div class="field-desc">已锁仓、质检或金融冻结的库存数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="retail_qty 零售 终端零售 retail sales"><div><div class="field-name">retail_qty / 终端零售</div><div class="field-desc">终端零售数量，用于动销与周转计算。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="turnover_days 周转天数 库存周转 days"><div><div class="field-name">turnover_days / 库存周转天数</div><div class="field-desc">用于判断库存健康度的派生指标。</div></div><span class="catalog-item-type">派生</span></div>
                 </div>
             </details>
-            <details class="data-domain-card" data-search="排产 到货 剪刀差 v_dm_sal_prod_arrival_m plan_qty arrival_qty retail_qty gap_qty">
+            <details class="data-domain-card" data-search="物流 排产 到货 剪刀差 logistics production arrival v_dm_sal_prod_arrival_m plan_qty arrival_qty shipment_qty retail_qty gap_qty eta_date port_name vessel_name customs_status">
                 <summary>
                     <div class="data-domain-title">
                         <strong>v_dm_sal_prod_arrival_m</strong>
-                        <span>排产计划、实际到货、零售剪刀差月表</span>
+                        <span>物流场景：排产、发运、到港、清关与到货月表</span>
                     </div>
                     <div class="data-domain-meta">
                         <span class="catalog-item-type">物流域</span>
@@ -2235,17 +2208,42 @@
                     </div>
                 </summary>
                 <div class="field-list">
-                    <div class="field-row" data-search="plan_qty 排产 计划 指标"><div><div class="field-name">plan_qty</div><div class="field-desc">月度排产计划数量。</div></div><span class="catalog-item-type">指标</span></div>
-                    <div class="field-row" data-search="arrival_qty 到货 实际到货 指标"><div><div class="field-name">arrival_qty</div><div class="field-desc">实际到货入库数量。</div></div><span class="catalog-item-type">指标</span></div>
-                    <div class="field-row" data-search="retail_qty 零售 终端零售 指标"><div><div class="field-name">retail_qty</div><div class="field-desc">同月终端零售数量。</div></div><span class="catalog-item-type">指标</span></div>
-                    <div class="field-row" data-search="gap_qty 剪刀差 到货零售差异 派生指标"><div><div class="field-name">gap_qty</div><div class="field-desc">到货量 - 零售量，大于 500 进入预警。</div></div><span class="catalog-item-type">派生</span></div>
+                    <div class="field-row" data-search="plan_qty 排产计划 计划 production plan"><div><div class="field-name">plan_qty / 排产计划</div><div class="field-desc">月度排产计划数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="shipment_qty 发运量 装船 shipping shipment"><div><div class="field-name">shipment_qty / 发运量</div><div class="field-desc">已从工厂或港口发运的车辆数。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="arrival_qty 到货 实际到货 arrival"><div><div class="field-name">arrival_qty / 实际到货</div><div class="field-desc">实际到货入库数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="gap_qty 剪刀差 到货零售差异 gap"><div><div class="field-name">gap_qty / 到货零售差异</div><div class="field-desc">到货量 - 零售量，用于识别阶段性剪刀差。</div></div><span class="catalog-item-type">派生</span></div>
+                    <div class="field-row" data-search="eta_date 预计到港 ETA estimated arrival"><div><div class="field-name">eta_date / 预计到港日期</div><div class="field-desc">船期预计到港日期。</div></div><span class="catalog-item-type">时间</span></div>
+                    <div class="field-row" data-search="port_name 港口 到港港口 port"><div><div class="field-name">port_name / 到港港口</div><div class="field-desc">车辆目的港或中转港名称。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="vessel_name 船名 航次 vessel ship"><div><div class="field-name">vessel_name / 船名航次</div><div class="field-desc">承运船舶或航次标识。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="customs_status 清关状态 customs clearance"><div><div class="field-name">customs_status / 清关状态</div><div class="field-desc">未申报、清关中、已放行等状态。</div></div><span class="catalog-item-type">状态</span></div>
                 </div>
             </details>
-            <details class="data-domain-card" data-search="经销商 渠道 国家 dealer country city dlr_name">
+            <details class="data-domain-card" data-search="销售 订单 线索 成交 sales order lead v_dm_sal_retail_order_dly order_id lead_qty test_drive_qty contract_qty cancel_qty retail_amount discount_amount">
+                <summary>
+                    <div class="data-domain-title">
+                        <strong>v_dm_sal_retail_order_dly</strong>
+                        <span>销售场景：线索、试驾、订单、成交与优惠日表</span>
+                    </div>
+                    <div class="data-domain-meta">
+                        <span class="catalog-item-type">销售域</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </summary>
+                <div class="field-list">
+                    <div class="field-row" data-search="order_id 订单号 订单ID order"><div><div class="field-name">order_id / 订单号</div><div class="field-desc">终端零售订单唯一编号。</div></div><span class="catalog-item-type">主键</span></div>
+                    <div class="field-row" data-search="lead_qty 线索量 销售线索 lead"><div><div class="field-name">lead_qty / 线索量</div><div class="field-desc">当日新增销售线索数。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="test_drive_qty 试驾量 test drive"><div><div class="field-name">test_drive_qty / 试驾量</div><div class="field-desc">完成试驾的客户数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="contract_qty 签约量 合同 contract"><div><div class="field-name">contract_qty / 签约量</div><div class="field-desc">已签约订单数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="cancel_qty 取消订单 退订 cancel"><div><div class="field-name">cancel_qty / 取消订单</div><div class="field-desc">当日取消或退订订单数量。</div></div><span class="catalog-item-type">指标</span></div>
+                    <div class="field-row" data-search="retail_amount 零售金额 销售额 amount revenue"><div><div class="field-name">retail_amount / 零售金额</div><div class="field-desc">终端成交金额。</div></div><span class="catalog-item-type">金额</span></div>
+                    <div class="field-row" data-search="discount_amount 优惠金额 折扣 discount"><div><div class="field-name">discount_amount / 优惠金额</div><div class="field-desc">成交优惠、返利或折扣金额。</div></div><span class="catalog-item-type">金额</span></div>
+                </div>
+            </details>
+            <details class="data-domain-card" data-search="经销商 渠道 国家 dealer country city dlr_name channel_level dealer_grade open_date sales_manager">
                 <summary>
                     <div class="data-domain-title">
                         <strong>dim_oversea_dealer</strong>
-                        <span>海外经销商、国家、城市与渠道层级维表</span>
+                        <span>渠道场景：海外经销商、区域、等级与负责人维表</span>
                     </div>
                     <div class="data-domain-meta">
                         <span class="catalog-item-type">维表</span>
@@ -2253,15 +2251,50 @@
                     </div>
                 </summary>
                 <div class="field-list">
-                    <div class="field-row" data-search="country_name 国家 维度"><div><div class="field-name">country_name</div><div class="field-desc">国家名称，用于国家级下钻。</div></div><span class="catalog-item-type">维度</span></div>
-                    <div class="field-row" data-search="city_name 城市 维度"><div><div class="field-name">city_name</div><div class="field-desc">城市名称，用于网点地域分析。</div></div><span class="catalog-item-type">维度</span></div>
-                    <div class="field-row" data-search="dlr_name 经销商 网点 维度"><div><div class="field-name">dlr_name</div><div class="field-desc">经销商或网点名称。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="dealer_id 经销商ID dealer id"><div><div class="field-name">dealer_id / 经销商ID</div><div class="field-desc">经销商主数据唯一编号。</div></div><span class="catalog-item-type">主键</span></div>
+                    <div class="field-row" data-search="dlr_name 经销商 网点 dealer name"><div><div class="field-name">dlr_name / 经销商名称</div><div class="field-desc">经销商或网点名称。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="country_name 国家 country"><div><div class="field-name">country_name / 国家</div><div class="field-desc">国家名称，用于国家级下钻。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="city_name 城市 city"><div><div class="field-name">city_name / 城市</div><div class="field-desc">城市名称，用于网点地域分析。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="channel_level 渠道层级 一级 二级 channel"><div><div class="field-name">channel_level / 渠道层级</div><div class="field-desc">一级店、二级网点、服务站等渠道层级。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="dealer_grade 经销商等级 星级 grade"><div><div class="field-name">dealer_grade / 经销商等级</div><div class="field-desc">A/B/C 或星级等网络评价等级。</div></div><span class="catalog-item-type">维度</span></div>
+                    <div class="field-row" data-search="open_date 开业日期 建店日期 open date"><div><div class="field-name">open_date / 开业日期</div><div class="field-desc">经销商正式开业日期。</div></div><span class="catalog-item-type">时间</span></div>
+                    <div class="field-row" data-search="sales_manager 销售经理 区域经理 manager"><div><div class="field-name">sales_manager / 销售经理</div><div class="field-desc">负责该网点的区域销售经理。</div></div><span class="catalog-item-type">人员</span></div>
+                </div>
+            </details>
+            <details class="data-domain-card" data-search="财务 回款 毛利 费用 finance payment margin v_fin_vehicle_profit_m invoice_amount payment_amount gross_profit logistics_cost rebate_amount">
+                <summary>
+                    <div class="data-domain-title">
+                        <strong>v_fin_vehicle_profit_m</strong>
+                        <span>财务场景：开票、回款、毛利、物流费与返利月表</span>
+                    </div>
+                    <div class="data-domain-meta">
+                        <span class="catalog-item-type">财务域</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </summary>
+                <div class="field-list">
+                    <div class="field-row" data-search="invoice_amount 开票金额 invoice billing"><div><div class="field-name">invoice_amount / 开票金额</div><div class="field-desc">月度车辆开票金额。</div></div><span class="catalog-item-type">金额</span></div>
+                    <div class="field-row" data-search="payment_amount 回款金额 payment collection"><div><div class="field-name">payment_amount / 回款金额</div><div class="field-desc">当月已到账回款金额。</div></div><span class="catalog-item-type">金额</span></div>
+                    <div class="field-row" data-search="receivable_amount 应收账款 receivable ar"><div><div class="field-name">receivable_amount / 应收账款</div><div class="field-desc">尚未回款的应收余额。</div></div><span class="catalog-item-type">金额</span></div>
+                    <div class="field-row" data-search="gross_profit 毛利 gross profit margin"><div><div class="field-name">gross_profit / 毛利</div><div class="field-desc">扣除车辆成本后的毛利金额。</div></div><span class="catalog-item-type">金额</span></div>
+                    <div class="field-row" data-search="logistics_cost 物流费用 运费 freight cost"><div><div class="field-name">logistics_cost / 物流费用</div><div class="field-desc">车辆运输、港杂及相关物流费用。</div></div><span class="catalog-item-type">金额</span></div>
+                    <div class="field-row" data-search="rebate_amount 返利金额 rebate incentive"><div><div class="field-name">rebate_amount / 返利金额</div><div class="field-desc">经销商返利或商务政策激励金额。</div></div><span class="catalog-item-type">金额</span></div>
                 </div>
             </details>
         </div>
     </div>
 
     <!-- 4. 双栏交互工作区容器 (Workspace Container) -->
+    <div class="card-pool-drawer" id="card-pool-drawer">
+        <div class="card-pool-header">
+            <span><i class="fa-solid fa-layer-group"></i> 卡片历史</span>
+            <button class="header-btn" onclick="toggleCardPool()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="card-pool-list" id="card-pool-list">
+            <!-- 历史卡片缩略图 -->
+        </div>
+    </div>
+
     <div id="workspace-container">
         
         <!-- 4.1 左半栏：对话流与思考舱 (Left Panel - Chat & CoT) -->
@@ -2366,11 +2399,6 @@
                         <i class="fa-solid fa-globe"></i>
                         <span>联网搜索</span>
                     </div>
-                    <div class="view-mode-tabs" style="margin-left: auto;">
-                        <button class="view-mode-tab active" type="button">审计视图</button>
-                        <button class="view-mode-tab" type="button">业务视图</button>
-                        <button class="view-mode-tab" type="button">调试视图</button>
-                    </div>
                 </div>
                 <div class="input-wrapper">
                     <textarea id="chat-input" placeholder="向智能体提问（如：查询中东各车型库存）..." onkeydown="handleEnter(event)" oninput="handleInputState()"></textarea>
@@ -2399,7 +2427,7 @@
                     </button>
                     <button class="canvas-btn" onclick="toggleCardPool()" title="卡片历史"><i class="fa-solid fa-layer-group"></i><span>卡片历史</span></button>
                     <button class="canvas-btn" onclick="toggleCatalog()" title="可访问数据"><i class="fa-solid fa-database"></i><span>可访问数据</span></button>
-                    <button class="canvas-btn primary" onclick="exportCurrentCards()" title="导出"><i class="fa-solid fa-download"></i><span>导出</span></button>
+                    <button class="canvas-btn primary" onclick="exportCurrentCards()" title="导出明细 Excel"><i class="fa-solid fa-file-excel"></i><span>明细Excel</span></button>
                 </div>
             </div>
 
@@ -2411,17 +2439,6 @@
                     <p>问一个数据相关问题，我会在这里为您生成可视化分析</p>
                 </div>
                 <!-- 动态生成的卡片会插入到这里 -->
-            </div>
-
-            <!-- 卡片池 - 历史生成的卡片可快速切换 -->
-            <div class="card-pool-drawer" id="card-pool-drawer">
-                <div class="card-pool-header">
-                    <span><i class="fa-solid fa-layer-group"></i> 卡片历史</span>
-                    <button class="header-btn" onclick="toggleCardPool()"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="card-pool-list" id="card-pool-list">
-                    <!-- 历史卡片缩略图 -->
-                </div>
             </div>
 
         </div>
@@ -2783,10 +2800,6 @@
                         <div class="dynamic-card chart-card-dynamic" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
                                 <h3><i class="fa-solid fa-chart-${card.type === CardType.CHART_BAR ? 'bar' : 'line'}"></i> ${card.title}</h3>
-                                <div class="dynamic-card-actions">
-                                    <div class="dynamic-card-action" title="全屏"><i class="fa-solid fa-expand"></i></div>
-                                    <div class="dynamic-card-action" title="导出"><i class="fa-solid fa-download"></i></div>
-                                </div>
                             </div>
                             <div class="chart-container" id="${chartId}"></div>
                         </div>
@@ -2810,7 +2823,7 @@
                             <div class="dynamic-card-header">
                                 <h3><i class="fa-solid fa-table"></i> ${card.title}</h3>
                                 <div class="dynamic-card-actions">
-                                    <div class="dynamic-card-action" title="导出"><i class="fa-solid fa-download"></i></div>
+                                    <button class="dynamic-card-action" type="button" onclick="downloadTableCard(${index})" title="下载明细 Excel"><i class="fa-solid fa-file-excel"></i></button>
                                 </div>
                             </div>
                             <div class="table-wrapper">
@@ -3117,7 +3130,9 @@
             if (icon) {
                 icon.className = focused ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
             }
+            updateWorkspaceMetrics();
             setTimeout(() => {
+                updateWorkspaceMetrics();
                 document.querySelectorAll('.chart-container').forEach(chartDom => {
                     const instance = typeof echarts !== 'undefined' ? echarts.getInstanceByDom(chartDom) : null;
                     if (instance) instance.resize();
@@ -3148,6 +3163,7 @@
         // 切换卡片池
         function toggleCardPool() {
             const drawer = document.getElementById('card-pool-drawer');
+            if (!drawer) return;
             updateWorkspaceMetrics();
             catalogDrawer.classList.remove('active');
             isCardPoolOpen = !isCardPoolOpen;
@@ -3157,6 +3173,7 @@
             } else {
                 drawer.classList.remove('active');
             }
+            setTimeout(updateWorkspaceMetrics, 360);
         }
 
         // 更新看板标题
@@ -3183,6 +3200,41 @@
             showCardsEmptyState(container);
             currentCards = [];
             updateCanvasTitle('业务答案画布', '结论、图表、明细与建议');
+        }
+
+        // 导出明细数据 Excel；图表只展示，不提供下载或放大。
+        function downloadTableCard(cardIndex) {
+            const card = currentCards[cardIndex];
+            if (!card || card.type !== CardType.TABLE || !card.data) {
+                showToast('当前卡片没有可下载的明细数据');
+                return;
+            }
+            const escapeCell = value => String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+            const headerHtml = card.data.headers.map(h => `<th>${escapeCell(h)}</th>`).join('');
+            const rowsHtml = card.data.rows.map(row => `<tr>${row.map(cell => `<td>${escapeCell(cell)}</td>`).join('')}</tr>`).join('');
+            const workbook = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table><thead><tr>${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+            const blob = new Blob(['\ufeff' + workbook], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${card.title || '明细数据'}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showToast('明细数据 Excel 已下载');
+        }
+
+        function exportCurrentCards() {
+            const tableIndex = currentCards.findIndex(card => card.type === CardType.TABLE);
+            if (tableIndex === -1) {
+                showToast('当前没有可下载的明细数据');
+                return;
+            }
+            downloadTableCard(tableIndex);
         }
 
         function refreshDashboardDataSilently() {
@@ -3779,6 +3831,32 @@
             };
         }
 
+        function positionWorkspaceNearLauncher() {
+            if (isFullscreen) return;
+            const launcherRect = launcher.getBoundingClientRect();
+            const workspaceWidth = Math.min(920, window.innerWidth - 40);
+            const workspaceHeight = Math.min(740, window.innerHeight - 120);
+            const margin = 20;
+            const gap = 14;
+            const anchorX = launcherRect.left + launcherRect.width / 2;
+            const anchorY = launcherRect.top + launcherRect.height / 2;
+
+            let left = anchorX < window.innerWidth / 2 ? launcherRect.left : launcherRect.right - workspaceWidth;
+            let top = launcherRect.top - workspaceHeight - gap;
+            if (top < margin) top = launcherRect.bottom + gap;
+            if (top + workspaceHeight > window.innerHeight - margin) top = anchorY - workspaceHeight / 2;
+
+            left = Math.max(margin, Math.min(window.innerWidth - workspaceWidth - margin, left));
+            top = Math.max(margin, Math.min(window.innerHeight - workspaceHeight - margin, top));
+
+            workspace.style.left = left + 'px';
+            workspace.style.top = top + 'px';
+            workspace.style.right = 'auto';
+            workspace.style.bottom = 'auto';
+            workspace.style.transformOrigin = `${Math.max(0, Math.min(workspaceWidth, anchorX - left))}px ${Math.max(0, Math.min(workspaceHeight, anchorY - top))}px`;
+            updateWorkspaceMetrics();
+        }
+
         launcher.addEventListener('mousedown', function(e) {
             e.preventDefault();
             isDragging = true;
@@ -3808,6 +3886,9 @@
             launcher.style.top = next.top + 'px';
             launcher.style.bottom = 'auto';
             launcher.style.right = 'auto';
+            if (isWorkspaceOpen && !isFullscreen) {
+                positionWorkspaceNearLauncher();
+            }
         });
 
         document.addEventListener('mouseup', function(e) {
@@ -3820,6 +3901,9 @@
             launcher.style.top = next.top + 'px';
             launcher.style.bottom = 'auto';
             launcher.style.right = 'auto';
+            if (isWorkspaceOpen && !isFullscreen) {
+                positionWorkspaceNearLauncher();
+            }
             dragStartX = e.clientX;
             dragStartY = e.clientY;
         });
@@ -3836,8 +3920,10 @@
             
             isWorkspaceOpen = !isWorkspaceOpen;
             if (isWorkspaceOpen) {
+                positionWorkspaceNearLauncher();
                 workspace.style.display = 'flex';
                 setTimeout(() => {
+                    positionWorkspaceNearLauncher();
                     workspace.style.opacity = '1';
                     workspace.style.transform = 'scale(1)';
                     updateWorkspaceMetrics();
@@ -3852,6 +3938,10 @@
         function closeWorkspaceDirectly(e) {
             if (e) e.stopPropagation();
             isWorkspaceOpen = false;
+            catalogDrawer.classList.remove('active');
+            const cardPoolDrawer = document.getElementById('card-pool-drawer');
+            if (cardPoolDrawer) cardPoolDrawer.classList.remove('active');
+            isCardPoolOpen = false;
             workspace.style.opacity = '0';
             workspace.style.transform = 'scale(0.92)';
             setTimeout(() => {
@@ -3865,6 +3955,11 @@
             if (isFullscreen) {
                 workspace.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
                 workspace.classList.add('fullscreen-state');
+                workspace.style.left = '20px';
+                workspace.style.top = '20px';
+                workspace.style.right = '20px';
+                workspace.style.bottom = '20px';
+                workspace.style.transformOrigin = 'center center';
                 setReportFocus(false);
                 fullscreenIcon.className = 'fa-solid fa-compress';
                 setTimeout(() => {
@@ -3876,6 +3971,7 @@
                 }, 510);
             } else {
                 workspace.classList.remove('fullscreen-state');
+                positionWorkspaceNearLauncher();
                 fullscreenIcon.className = 'fa-solid fa-expand';
                 catalogDrawer.classList.remove('active');
                 closeHistoryDrawer();
@@ -3894,6 +3990,7 @@
                 isCardPoolOpen = false;
             }
             catalogDrawer.classList.toggle('active');
+            setTimeout(updateWorkspaceMetrics, 360);
         }
 
         function filterAccessibleData(keyword) {
@@ -4333,8 +4430,16 @@
         // ------------------------------------------
         window.addEventListener('DOMContentLoaded', () => {
             initSessions();
+            updateWorkspaceMetrics();
             // 页面加载时显示空白状态，等待用户提问
             clearCards();
+        });
+        window.addEventListener('resize', () => {
+            if (isWorkspaceOpen && !isFullscreen) {
+                positionWorkspaceNearLauncher();
+            } else {
+                updateWorkspaceMetrics();
+            }
         });
     </script>
 </body>
