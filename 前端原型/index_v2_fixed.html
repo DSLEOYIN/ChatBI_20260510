@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广汽国际 AI 助手 Workspace 2.0</title>
+    <!-- 引入 Outfit 与 Inter 高级字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- 引入 FontAwesome 图标库 CDN (用于界面修饰) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 ECharts 5 库 CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    
+    <style>
+        /* ==========================================
+           1. 极简白色调设计系统 (Sleek Light Design System)
+           ========================================== */
+        :root {
+            --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            --font-display: 'Outfit', var(--font-primary);
+            
+            /* 高级轻量商业调色盘 (简洁白) */
+            --bg-base: #f4f7fb;
+            --bg-canvas: #f8fafd;
+            --bg-card: #ffffff;
+            --border-light: rgba(228, 235, 245, 0.95);
+            --border-focused: #2563eb;
+            
+            /* 状态色 */
+            --electric-blue: #2563eb;
+            --electric-blue-light: rgba(37, 99, 235, 0.08);
+            --aurora-green: #1bb96b;
+            --aurora-green-glow: rgba(27, 185, 107, 0.12);
+            --alert-orange: #e05e38;
+            --alert-orange-glow: rgba(224, 94, 56, 0.08);
+            --danger-red: #ef4444;
+            
+            /* 文字颜色 */
+            --text-primary: #18202f;
+            --text-secondary: #4c5667;
+            --text-muted: #8f97a5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(27, 185, 107, 0.03) 0%, transparent 45%);
+        }
+
+        /* 隐藏滚动条但保留滚动功能 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d0d5dd;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #98a2b3;
+        }
+
+        /* ==========================================
+           2. 经典悬浮球组件 (Draggable Launcher Balloon)
+           ========================================== */
+        #chat-launcher {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 68px;
+            height: 68px;
+            border-radius: 24px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            background: linear-gradient(145deg, #3a3a3a 0%, #1f1f1f 38%, #0f0f0f 74%, #000000 100%);
+            box-shadow: 0 18px 40px rgba(15, 15, 15, 0.28), inset 0 1px 0 rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: transform 0.28s ease, box-shadow 0.28s ease, border-radius 0.28s ease;
+        }
+        #chat-launcher:active {
+            cursor: grabbing;
+            transform: scale(0.96);
+        }
+        #chat-launcher:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 24px 48px rgba(15, 15, 15, 0.35), inset 0 1px 0 rgba(255,255,255,0.24);
+            border-radius: 26px;
+        }
+        #chat-launcher::before {
+            content: '';
+            position: absolute;
+            inset: 2px 2px auto 2px;
+            height: 42%;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);
+            pointer-events: none;
+        }
+        .launcher-avatar-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -8px 18px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+        .launcher-avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .badge-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(180deg, #5ef0a2 0%, #1bb96b 100%);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.96);
+            box-shadow: 0 0 0 4px rgba(30, 194, 110, 0.1);
+            z-index: 2;
+        }
+
+        /* ==========================================
+           3. 简洁白色双态容器 (Workspace Container)
+           ========================================== */
+        #workspace-container {
+            position: fixed;
+            bottom: 116px;
+            right: 32px;
+            width: 440px;
+            height: 680px;
+            border-radius: 28px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 34px 80px rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            z-index: 998;
+            display: none;
+            flex-direction: row;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: bottom right;
+        }
+
+        #workspace-container.fullscreen-state {
+            bottom: 20px;
+            right: 20px;
+            width: calc(100vw - 40px);
+            height: calc(100vh - 40px);
+            border-radius: 28px;
+        }
+
+        /* ==========================================
+           4. 左半栏：聊天对话流 (Left Panel - Chat Pane)
+           ========================================== */
+        .chat-pane {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-right: 1px solid transparent;
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-right 0.5s;
+            background: linear-gradient(180deg, #f8fafd 0%, #f4f7fb 100%);
+        }
+        #workspace-container.fullscreen-state .chat-pane {
+            width: 38%;
+            border-right: 1px solid var(--border-light);
+        }
+
+        /* 页头 */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,251,250,0.95) 100%);
+            border-bottom: 1px solid rgba(240, 242, 245, 0.9);
+            position: relative;
+            z-index: 2;
+        }
+        .header-title-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .panel-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #2d2d2d 0%, #141414 52%, #000000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 18px rgba(15, 15, 15, 0.2);
+            overflow: hidden;
+        }
+        .panel-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.2px;
+        }
+        .panel-subtitle {
+            display: block;
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-btn {
+            width: 30px;
+            height: 30px;
+            background: rgba(245, 247, 250, 0.9);
+            border: 1px solid rgba(228, 232, 238, 0.95);
+            cursor: pointer;
+            padding: 0;
+            border-radius: 10px;
+            color: #7f8897;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header-btn:hover {
+            background: #f3f4f6;
+            border-color: #d7dbe1;
+            color: #111111;
+        }
+        .header-btn.active {
+            background: #eef2f6;
+            border-color: #cbd5e1;
+            color: #2563eb;
+        }
+
+        .drawer-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.15);
+            backdrop-filter: blur(2px);
+            z-index: 99;
+            display: none;
+        }
+        .drawer-overlay.active {
+            display: block;
+        }
+
+        /* ==========================================
+           5. 左侧会话历史抽屉 (History Sidebar Drawer)
+           ========================================== */
+        .history-drawer {
+            position: absolute;
+            top: 0;
+            left: -260px;
+            width: 260px;
+            height: 100%;
+            background: #ffffff;
+            border-right: 1px solid var(--border-light);
+            box-shadow: 10px 0 30px rgba(15,23,42,0.05);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .history-drawer.active {
+            left: 0;
+        }
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 16px;
+            border-bottom: 1px solid rgba(240, 242, 245, 0.9);
+        }
+        .drawer-header h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .drawer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        /* 变为 Flex 容器以容纳右侧悬浮删除垃圾桶 */
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: #fafbfc;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer-item:hover {
+            background: #f4f6f9;
+            border-color: #e4e7eb;
+        }
+        .drawer-item.active {
+            background: #eef2f6;
+            border-color: #cbd5e1;
+        }
+        .drawer-item-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .drawer-item-time {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        /* 极简垃圾桶删除按钮 */
+        .delete-session-btn {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer-item:hover .delete-session-btn {
+            opacity: 0.6;
+        }
+        .delete-session-btn:hover {
+            opacity: 1 !important;
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        /* 历史会话抽屉顶部“新建对话”按钮样式 */
+        .drawer-new-chat-container {
+            padding: 8px 12px 6px;
+        }
+        .new-chat-drawer-btn {
+            width: 100%;
+            height: 38px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            color: #334155;
+            font-size: 11.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+            outline: none;
+        }
+        .new-chat-drawer-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
+            transform: translateY(-0.5px);
+        }
+        .new-chat-drawer-btn:active {
+            transform: scale(0.96);
+        }
+        .new-chat-drawer-btn i {
+            font-size: 10.5px;
+        }
+
+        /* ==========================================
+           高级确认弹窗 (Custom Confirmation Modal)
+           ========================================== */
+        .custom-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .custom-modal-backdrop.active {
+            display: flex;
+            opacity: 1;
+        }
+        .custom-confirm-modal {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            width: 340px;
+            padding: 24px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+            transform: scale(0.92);
+            transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .custom-modal-backdrop.active .custom-confirm-modal {
+            transform: scale(1);
+        }
+        .modal-warning-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #fee2e2;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .modal-header-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .modal-header-row h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .modal-body-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .modal-actions-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .modal-btn {
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .modal-btn.cancel {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #475569;
+        }
+        .modal-btn.cancel:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+        }
+        .modal-btn.confirm:hover {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
+        }
+
+        /* 对话区 (自适应大方间距) */
+        .chat-history {
+            flex: 1;
+            padding: 12px 14px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 欢迎推荐卡 */
+        .welcome-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 12px rgba(15,23,42,0.03);
+            border-radius: 16px;
+            padding: 14px 16px;
+            text-align: left;
+        }
+        .welcome-card h3 {
+            font-family: var(--font-primary);
+            font-size: 14.5px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .welcome-card p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .recommendation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .recommend-btn {
+            background: rgba(245, 247, 250, 0.8);
+            border: 1px solid rgba(228, 232, 238, 0.9);
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+        .recommend-btn:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+        }
+        .recommend-btn i {
+            color: var(--text-primary);
+            opacity: 0.5;
+        }
+
+        /* 极简对话气泡 */
+        .chat-bubble {
+            max-width: 94%;
+            display: flex;
+            gap: 10px;
+            animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .chat-bubble.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .chat-bubble.bot {
+            align-self: flex-start;
+        }
+        #workspace-container.fullscreen-state .chat-bubble {
+            max-width: 85%;
+        }
+        
+        .bubble-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+            background: #fff;
+            border: 1px solid var(--border-light);
+        }
+        .bubble-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .bubble-content {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 10px 14px;
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+        .chat-bubble.user .bubble-content {
+            background: linear-gradient(135deg, #323232 0%, #111111 100%);
+            border-color: transparent;
+            border-bottom-right-radius: 4px;
+            color: #ffffff;
+            box-shadow: 0 5px 14px rgba(15, 15, 15, 0.12);
+        }
+        .chat-bubble.bot .bubble-content {
+            border-top-left-radius: 4px;
+        }
+
+        /* ------------------------------------------
+           新版底部输入栏：点亮/不点亮 联网搜索 Filter Chip
+           ------------------------------------------ */
+        .chat-input-bar {
+            padding: 12px 14px 16px;
+            border-top: 1px solid rgba(240, 242, 245, 0.9);
+            background: #ffffff;
+        }
+        .input-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 8px;
+            padding: 0 4px;
+        }
+        /* 实装 点亮/不点亮 的极简按钮 (实装高阶弹性交互与光影扫过动效) */
+        .web-search-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 5px 10.5px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .web-search-pill:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #334155;
+            transform: translateY(-0.5px);
+        }
+        .web-search-pill:active {
+            transform: scale(0.93);
+        }
+        .web-search-pill i {
+            font-size: 11px;
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        /* 点亮状态 */
+        .web-search-pill.active {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+        .web-search-pill.active i {
+            transform: rotate(360deg);
+            color: #2563eb;
+            text-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+        }
+        /* 扫光动效 */
+        .web-search-pill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 40%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.12), transparent);
+            transition: none;
+        }
+        .web-search-pill.active::after {
+            left: 100%;
+            transition: left 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .input-wrapper {
+            position: relative;
+            background: rgba(245, 247, 250, 0.95);
+            border: 1px solid rgba(228, 232, 238, 0.95);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            padding: 2px 10px;
+            transition: all 0.3s;
+        }
+        .input-wrapper:focus-within {
+            border-color: #cbd5e1;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.06);
+        }
+        .input-wrapper textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            font-size: 12.5px;
+            padding: 8px 0;
+            min-height: 34px;
+            max-height: 100px;
+            line-height: 1.4;
+            overflow-y: auto;
+            field-sizing: content;
+        }
+        .input-wrapper textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* 发送按钮 */
+        .send-btn {
+            background: linear-gradient(135deg, #f1f3f5 0%, #e2e5e9 100%);
+            border: 1px solid rgba(0,0,0,0.03);
+            color: #94a3b8;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+        .send-btn.active {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: scale(1.02);
+        }
+        .send-btn.active:hover {
+            transform: scale(1.06);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.35);
+        }
+        .send-btn.active:active {
+            transform: scale(0.96);
+        }
+
+        .shortcut-tip {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 6px;
+            padding-right: 6px;
+        }
+        .shortcut-tip kbd {
+            background: #f3f4f6;
+            border-radius: 3px;
+            padding: 1px 3px;
+            font-size: 9px;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+        }
+
+        /* 思维链发光卡片 */
+        .thinking-card {
+            background: rgba(245, 247, 250, 0.6);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-top: 10px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .thinking-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .thinking-card-header h4 {
+            font-family: var(--font-primary);
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .thinking-card-header h4 img {
+            width: 13px;
+            height: 13px;
+            animation: spin 3s linear infinite;
+        }
+        .thinking-card-header .toggle-icon {
+            font-size: 11px;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+        .thinking-steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(228, 235, 245, 0.5);
+        }
+        .thinking-step {
+            display: flex;
+            gap: 10px;
+            position: relative;
+        }
+        .thinking-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 9px;
+            top: 22px;
+            bottom: -12px;
+            width: 2px;
+            background: #e8edf4;
+        }
+        .step-icon-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #d9e0ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #a0abb8;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+        .thinking-step.active .step-icon-dot {
+            border-color: #111111;
+            background: #111111;
+            color: #fff;
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.12);
+        }
+        .thinking-step.done .step-icon-dot {
+            border-color: #111111;
+            background: #fff;
+            color: #111111;
+        }
+        .thinking-step.warning .step-icon-dot {
+            background: var(--alert-orange);
+            border-color: var(--alert-orange);
+            color: #fff;
+            box-shadow: 0 0 0 3px var(--alert-orange-glow);
+            animation: flash 1s infinite alternate;
+        }
+        .step-body {
+            flex: 1;
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            padding-top: 1px;
+        }
+        .step-body .step-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        .step-body .step-desc {
+            color: var(--text-secondary);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        
+        /* SQL Sandbox Debugger */
+        .sql-sandbox {
+            margin-top: 6px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 10.5px;
+            color: var(--electric-blue);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.01);
+        }
+        .sql-sandbox-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-muted);
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+        }
+        .sql-sandbox-header i {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .sql-sandbox-header i:hover {
+            color: var(--text-primary);
+        }
+        .sql-sandbox pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            user-select: text;
+        }
+
+        /* ==========================================
+           6. 右半栏：商业智能画布 (Right Panel - BI Canvas)
+           ========================================== */
+        .bi-canvas {
+            flex: 1;
+            height: 100%;
+            background: var(--bg-canvas);
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+            position: relative;
+        }
+        #workspace-container.fullscreen-state .bi-canvas {
+            display: flex;
+        }
+
+        /* 简洁白页头 */
+        .canvas-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .canvas-header h2 {
+            font-family: var(--font-primary);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .canvas-controls {
+            display: flex;
+            gap: 10px;
+        }
+        .canvas-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 2px 6px rgba(15,23,42,0.02);
+            border-radius: 10px;
+            padding: 8px 14px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .canvas-btn img {
+            width: 14px;
+            height: 14px;
+        }
+        .canvas-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: var(--text-primary);
+        }
+        .canvas-btn.primary {
+            background: linear-gradient(135deg, #323232 0%, #111111 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(15, 15, 15, 0.15);
+        }
+        .canvas-btn.primary:hover {
+            background: linear-gradient(135deg, #424242 0%, #202020 100%);
+        }
+
+        /* KPI 指标栏 */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: transparent;
+        }
+        .kpi-card.alert::before {
+            background: var(--alert-orange);
+        }
+        .kpi-card.normal::before {
+            background: var(--aurora-green);
+        }
+        .kpi-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .kpi-value {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .kpi-trend {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+        .kpi-trend.up { color: var(--aurora-green); }
+        .kpi-trend.down { color: var(--danger-red); }
+        .kpi-trend.warning { color: var(--alert-orange); }
+
+        /* 图表行 */
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+        }
+        .chart-card-header h3 {
+            font-family: var(--font-primary);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .chart-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 明细数据网格 */
+        .grid-card {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+        }
+        .grid-card-header h3 {
+            font-family: var(--font-primary);
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+            background: #ffffff;
+        }
+        th, td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(228, 235, 245, 0.8);
+        }
+        th {
+            background: #fcfdff;
+            color: var(--text-secondary);
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        th:hover {
+            background: #f4f7fb;
+            color: var(--text-primary);
+        }
+        th i {
+            margin-left: 6px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        tr:hover td {
+            background: #fafbfc;
+        }
+        td span.alert-tag {
+            background: #fff0eb;
+            color: var(--alert-orange);
+            border: 1px solid rgba(224, 94, 56, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+        td span.safe-tag {
+            background: #eafbf1;
+            color: var(--aurora-green);
+            border: 1px solid rgba(27, 185, 107, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 500;
+        }
+
+        /* 数据字典 */
+        .catalog-drawer {
+            position: fixed;
+            top: 20px;
+            right: -320px;
+            width: 320px;
+            height: calc(100vh - 40px);
+            background: #ffffff;
+            border-left: 1px solid var(--border-light);
+            border-radius: 20px 0 0 20px;
+            box-shadow: -10px 0 30px rgba(15,23,42,0.06);
+            z-index: 1000;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .catalog-drawer.active {
+            right: 20px;
+        }
+        .catalog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .catalog-header h3 {
+            font-family: var(--font-primary);
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .catalog-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .catalog-item {
+            background: #fafbfc;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .catalog-item-name {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: var(--electric-blue);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+        .catalog-item-desc {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .catalog-item-type {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.03);
+            padding: 1px 4px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        /* 动效 */
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes slide-up {
+            0% { transform: translateY(10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes flash {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* 全局通知浮窗 */
+        #notification-box {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border-light);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(15,23,42,0.08);
+            z-index: 10000;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #notification-box.active {
+            transform: translateX(-50%) translateY(0);
+        }
+        #notification-box i {
+            color: var(--aurora-green);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 经典暗色发光悬浮球 (Launcher Ball with Avatar img) -->
+    <div id="chat-launcher" onclick="toggleWorkspace(event)" draggable="false">
+        <div class="launcher-avatar-wrapper">
+            <img src="assets/assistant-avatar.png" alt="AI 助手">
+            <div class="badge-dot"></div>
+        </div>
+    </div>
+
+    <!-- 2. 全局通知 (Light Toast Notification) -->
+    <div id="notification-box">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="notification-text">明细数据报表下载成功！</span>
+    </div>
+
+    <!-- 3. 数据字典隐藏侧边栏 (Data Catalog Drawer) -->
+    <div id="catalog-drawer" class="catalog-drawer">
+        <div class="catalog-header">
+            <h3><i class="fa-solid fa-book-sparkles"></i> 数据字典 (Data Catalog)</h3>
+            <button class="header-btn" onclick="toggleCatalog()"><i class="fa-solid fa-xmark" style="font-size: 13px;"></i></button>
+        </div>
+        <div class="catalog-list">
+            <div class="catalog-item">
+                <div class="catalog-item-name">area_name</div>
+                <div class="catalog-item-desc">目标大区或子公司名称</div>
+                <div class="catalog-item-type">VARCHAR(100) | 维度</div>
+            </div>
+            <div class="catalog-item">
+                <div class="catalog-item-name">model_name</div>
+                <div class="catalog-item-desc">车辆车型名称，如 GS8, EMZOOM</div>
+                <div class="catalog-item-type">VARCHAR(100) | 维度</div>
+            </div>
+            <div class="catalog-item">
+                <div class="catalog-item-name">stock_qty</div>
+                <div class="catalog-item-desc">总库存天数分母量 (在店库存)</div>
+                <div class="catalog-item-type">BIGINT | 指标</div>
+            </div>
+            <div class="catalog-item">
+                <div class="catalog-item-name">dlr_onway_qty</div>
+                <div class="catalog-item-desc">经销商在途库存量</div>
+                <div class="catalog-item-type">BIGINT | 指标</div>
+            </div>
+            <div class="catalog-item">
+                <div class="catalog-item-name">period_td</div>
+                <div class="catalog-item-desc">统计月份，格式 YYYY-MM</div>
+                <div class="catalog-item-type">VARCHAR(100) | 时间维度</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 双栏交互工作区容器 (Workspace Container) -->
+    <div id="workspace-container">
+        
+        <!-- 4.1 左半栏：对话流与思考舱 (Left Panel - Chat & CoT) -->
+        <div class="chat-pane" id="chat-pane">
+            
+            <!-- 遮罩层 (Drawer Overlay) -->
+            <div class="drawer-overlay" id="drawer-overlay" onclick="toggleHistoryDrawer(event)"></div>
+
+            <!-- 实装历史会话抽屉 (Collapsible History Sidebar Drawer) -->
+            <div class="history-drawer" id="history-drawer">
+                <div class="drawer-header">
+                    <h3>🕒 历史会话记录</h3>
+                    <button class="header-btn" onclick="toggleHistoryDrawer(event)"><i class="fa-solid fa-angle-left"></i></button>
+                </div>
+                <!-- 抽屉内顶部“新建对话”快捷动作按钮 (符合 ChatGPT/Claude 主流大厂交互设计) -->
+                <div class="drawer-new-chat-container">
+                    <button class="new-chat-drawer-btn" onclick="startNewChat(event)" title="开启新对话会话">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>开启新会话</span>
+                    </button>
+                </div>
+                <div class="drawer-list">
+                    <!-- JS 动态渲染列表，实现持久化无缝切换 -->
+                </div>
+            </div>
+
+            <!-- 页头：实装 历史记录(🕒) 与 折叠/全屏 控制按钮 -->
+            <div class="panel-header">
+                <div class="header-title-area">
+                    <div class="panel-avatar">
+                        <img src="assets/assistant-avatar.png" alt="AI 助手">
+                    </div>
+                    <div>
+                        <h3 class="panel-title">广汽国际 AI 助手</h3>
+                        <span class="panel-subtitle">层级推理数据决策中心 v2.0</span>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <!-- 历史会话按钮 -->
+                    <button class="header-btn" id="history-toggle-btn" onclick="toggleHistoryDrawer(event)" title="历史会话记录">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </button>
+                    <!-- 全屏扩展 -->
+                    <button class="header-btn" onclick="toggleFullscreen()" title="切换全屏/精简态">
+                        <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                    </button>
+                    <!-- 折叠关闭 (完美改为 × 关闭按钮，独立逻辑控制) -->
+                    <button class="header-btn close-btn" onclick="closeWorkspaceDirectly(event)" title="折叠关闭工作区">
+                        <i class="fa-solid fa-xmark" style="font-size: 13px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 对话流历史 -->
+            <div class="chat-history" id="chat-history">
+                
+                <!-- AI 欢迎卡片模板 (将被 JS 作为新对话初始节点动态载入) -->
+                <div class="chat-bubble bot" id="welcome-bubble">
+                    <div class="bubble-avatar"><img src="assets/assistant-avatar.png" alt="AI"></div>
+                    <div class="bubble-content" style="max-width: 100%;">
+                        <div class="welcome-card">
+                            <h3><i class="fa-solid fa-brain" style="color: var(--electric-blue);"></i> 郭总，您好！我是您的专属商业决策助手</h3>
+                            <p>我已经调取了您的业务画像：<strong>专注中东公司产销存及周转看板</strong>。我将通过 ReAct 思维链检索 Dify 知识库，调度底层 MCP 工具进行 SQL 生成并启动自愈沙盒，为您提供深度 analysis。</p>
+
+                            <div class="recommendation-list">
+                                <div class="recommend-btn" onclick="selectQuestion('诊断中东公司 GS8 车型本月的库存异常并给出建议')">
+                                    <span><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--alert-orange); margin-right: 6px;"></i>诊断中东公司 GS8 本月库存周转天数异常</span>
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </div>
+                                <div class="recommend-btn" onclick="selectQuestion('分析本月中东公司车型排产与实际到货差额')">
+                                    <span><i class="fa-solid fa-chart-line" style="color: var(--aurora-green); margin-right: 6px;"></i>分析本月中东车型排产与实际到货剪刀差</span>
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 底部输入框栏：实装高级联网搜索胶囊 pill & 动态发送 capsule -->
+            <div class="chat-input-bar">
+                <div class="input-toolbar">
+                    <div class="web-search-pill" id="web-search-pill" onclick="toggleWebSearch()">
+                        <i class="fa-solid fa-globe"></i>
+                        <span>联网搜索</span>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <textarea id="chat-input" placeholder="向智能体提问（如：查询中东各车型库存）..." onkeydown="handleEnter(event)" oninput="handleInputState()"></textarea>
+                    <button class="send-btn" id="send-btn" onclick="sendUserMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+                <div class="shortcut-tip">
+                    <span>快捷键: <kbd>Ctrl</kbd> + <kbd>/</kbd> 隐/显画布 | <kbd>Esc</kbd> 快速折叠工作区</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 4.2 右半栏：商业智能画布 (Right Panel - BI Canvas) -->
+        <div class="bi-canvas" id="bi-canvas">
+            
+            <!-- 看板头部 -->
+            <div class="canvas-header">
+                <h2>GAC 产销存大盘经营决策分析看板</h2>
+                <div class="canvas-controls">
+                    <button class="canvas-btn" onclick="toggleCatalog()"><img src="assets/icons/template-manage.svg" alt="字典" style="width:14px; height:14px;"> 数据字典</button>
+                    <button class="canvas-btn primary" onclick="exportCSV()"><img src="assets/icons/file-excel.svg" alt="Excel" style="width:14px; height:14px;"> 导出报表</button>
+                </div>
+            </div>
+
+            <!-- KPI 数据指标栏 -->
+            <div class="kpi-row">
+                <div class="kpi-card alert">
+                    <div class="kpi-title">中东总库存周转 <i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="kpi-value" id="kpi-1">48 天</div>
+                    <div class="kpi-trend warning">超安全线 18天</div>
+                </div>
+                <div class="kpi-card alert">
+                    <div class="kpi-title">GS8 周转天数 <i class="fa-solid fa-circle-exclamation"></i></div>
+                    <div class="kpi-value" id="kpi-2">65 天</div>
+                    <div class="kpi-trend warning">库存超标 116%</div>
+                </div>
+                <div class="kpi-card normal">
+                    <div class="kpi-title">在途在手总比率 <i class="fa-solid fa-circle-check"></i></div>
+                    <div class="kpi-value" id="kpi-3">1.25</div>
+                    <div class="kpi-trend up">健康合理</div>
+                </div>
+                <div class="kpi-card normal">
+                    <div class="kpi-title">EMZOOM 周转天数 <i class="fa-solid fa-circle-check"></i></div>
+                    <div class="kpi-value" id="kpi-4">12 天</div>
+                    <div class="kpi-trend up">动销极速</div>
+                </div>
+            </div>
+
+            <!-- 二维图表行 -->
+            <div class="chart-row">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>📊 中东公司车型库存天数对比</h3>
+                    </div>
+                    <div class="chart-container" id="bar-chart"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>📈 GS8 车型月到货量 VS 月零售走势</h3>
+                    </div>
+                    <div class="chart-container" id="line-chart"></div>
+                </div>
+            </div>
+
+            <!-- 明细表格卡片 -->
+            <div class="grid-card">
+                <div class="grid-card-header">
+                    <h3>📄 中东大区库存及销量周转明细报表</h3>
+                </div>
+                <div class="table-wrapper">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortGrid(0)">车型名称 <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortGrid(1)">总库存 (在店) <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortGrid(2)">在途库存 <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortGrid(3)">本月批发量 <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortGrid(4)">周转天数 <i class="fa-solid fa-sort"></i></th>
+                                <th>库存状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GAC GS8</td>
+                                <td>3,200</td>
+                                <td>680</td>
+                                <td>1,480</td>
+                                <td>65 天</td>
+                                <td><span class="alert-tag">严重超警戒线</span></td>
+                            </tr>
+                            <tr>
+                                <td>GAC EMZOOM</td>
+                                <td>800</td>
+                                <td>150</td>
+                                <td>2,000</td>
+                                <td>12 天</td>
+                                <td><span class="safe-tag">极速动销</span></td>
+                            </tr>
+                            <tr>
+                                <td>GAC EMKOO</td>
+                                <td>1,100</td>
+                                <td>280</td>
+                                <td>900</td>
+                                <td>36 天</td>
+                                <td><span class="safe-tag">正常偏高</span></td>
+                            </tr>
+                            <tr>
+                                <td>GAC EMPOW</td>
+                                <td>500</td>
+                                <td>90</td>
+                                <td>450</td>
+                                <td>28 天</td>
+                                <td><span class="safe-tag">安全在控</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 高级二次确认弹窗 (Modern Custom Deletion Confirmation Dialog) -->
+    <div class="custom-modal-backdrop" id="delete-modal-backdrop" onclick="closeDeleteModal()">
+        <div class="custom-confirm-modal" onclick="event.stopPropagation()">
+            <div class="modal-header-row">
+                <div class="modal-warning-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3>确认删除此历史会话吗？</h3>
+            </div>
+            <div class="modal-body-text">
+                删除后，该会话的所有思维脑链 CoT 运行路径与关联看板数据将永久丢失，此操作不可撤销。
+            </div>
+            <div class="modal-actions-row">
+                <button class="modal-btn cancel" onclick="closeDeleteModal()">取消</button>
+                <button class="modal-btn confirm" id="delete-modal-confirm-btn">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+       7. 交互业务 JS 控制器 (Interactive Controllers)
+       ========================================== -->
+    <script>
+        const launcher = document.getElementById('chat-launcher');
+        const workspace = document.getElementById('workspace-container');
+        const historyBox = document.getElementById('chat-history');
+        const inputArea = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const fullscreenIcon = document.getElementById('fullscreen-icon');
+        const catalogDrawer = document.getElementById('catalog-drawer');
+        const historyDrawer = document.getElementById('history-drawer');
+        const drawerOverlay = document.getElementById('drawer-overlay');
+        const historyToggleBtn = document.getElementById('history-toggle-btn');
+        const webSearchPill = document.getElementById('web-search-pill');
+
+        let isWorkspaceOpen = false;
+        let isFullscreen = false;
+        let isHistoryOpen = false;
+        let isWebSearchOn = false;
+        let barChartInstance = null;
+        let lineChartInstance = null;
+
+        // ------------------------------------------
+        // 时间格式化辅助函数
+        // ------------------------------------------
+        function formatRelativeTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const oneDay = 24 * 60 * 60 * 1000;
+            const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+
+            if (diff < oneDay && date.getDate() === now.getDate()) {
+                return '今天 ' + timeStr;
+            } else if (diff < 2 * oneDay && date.getDate() === now.getDate() - 1) {
+                return '昨天 ' + timeStr;
+            } else {
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return month + '-' + day + ' ' + timeStr;
+            }
+        }
+
+        // ------------------------------------------
+        // 核心：实装持久化多会话状态管理器 (Session State Manager)
+        // ------------------------------------------
+        let sessions = [
+            {
+                id: 'session-gs8',
+                title: '中东 GS8 车型本月库存周转天数异常诊断',
+                time: '05-15 14:28',
+                chatHtml: '', // 初始化时拼装
+                hasCharts: true,
+                chartsData: { kpi1: '48 天', kpi2: '65 天', activeRow: 0 }
+            },
+            {
+                id: 'session-retail',
+                title: '中东大区 4 月到货量与零售走势分析',
+                time: '05-16 16:45',
+                chatHtml: '',
+                hasCharts: true,
+                chartsData: { kpi1: '42 天', kpi2: '30 天', activeRow: 1 }
+            }
+        ];
+        let currentSessionId = 'session-gs8';
+
+        // 拼接初始会话一的 HTML (让历史记录随便切，而不是重新启动)
+        function initSessions() {
+            const welcomeCardHTML = document.getElementById('welcome-bubble').outerHTML;
+            
+            // 拼接会话一 (GS8 库存异常)
+            sessions[0].chatHtml = welcomeCardHTML + `
+                <div class="chat-bubble user">
+                    <div class="bubble-avatar"><img src="assets/user-avatar.png" alt="用户"></div>
+                    <div class="bubble-content">诊断中东公司 GS8 车型本月的库存异常并给出建议</div>
+                </div>
+                <div class="chat-bubble bot" style="width: 100%;">
+                    <div class="bubble-avatar"><img src="assets/assistant-avatar.png" alt="AI"></div>
+                    <div class="bubble-content" style="max-width: 94%; flex: 1; background: #ffffff;">
+                        <div class="thinking-card" id="thinking-card-prefilled-1">
+                            <div class="thinking-card-header" onclick="toggleThinkingBody('thinking-card-prefilled-1')">
+                                <h4><img src="assets/icons/mode-thinking.svg" alt="CoT" style="animation:none;"> 智能体推理链 CoT 实时解析中...</h4>
+                                <i class="fa-solid fa-chevron-up toggle-icon" style="transform: rotate(0deg);"></i>
+                            </div>
+                            <div class="thinking-steps-container" id="steps-thinking-card-prefilled-1">
+                                <div class="thinking-step done"><div class="step-icon-dot">🧠</div><div class="step-body"><div class="step-title">【步骤一】载入用户大区记忆与画像</div><div class="step-desc">已成功检索郭总长期记忆：锁定您中东公司总经理身份，自动加载其产销存分析表权限。</div></div></div>
+                                <div class="thinking-step done"><div class="step-icon-dot">🧐</div><div class="step-body"><div class="step-title">【步骤二】意图二阶消解与 Skill 路由</div><div class="step-desc">检测到核心意图为：【数据诊断分析】。实体映射：车型=GS8，区域=中东大区。已选用本地 Skill [产销存诊断引擎] 运行。</div></div></div>
+                                <div class="thinking-step done"><div class="step-icon-dot">🔍</div><div class="step-body"><div class="step-title">【步骤三】并发检索车型库与表 DDL</div><div class="step-desc">多路并发请求 Dify Retrieve API 检索车型别名词典，召回建表 DDL并自动拼接口径。</div></div></div>
+                                <div class="thinking-step done"><div class="step-icon-dot">💻</div><div class="step-body"><div class="step-title">【步骤四】SQL 生成与数仓自愈调试 (已成功)</div><div class="step-desc">生成 SQL 执行校验，检测到表联查未指定表前缀歧义，已自动调用 [SQL_Repair_Skill] 校准成功，成功召回 15 行明细数据！</div></div></div>
+                                <div class="thinking-step done"><div class="step-icon-dot">📊</div><div class="step-body"><div class="step-title">【步骤五】深度洞察与可视化装配</div><div class="step-desc">成功将数据转化为 ECharts 配置 Options，右侧看板已联动渲染完毕。</div></div></div>
+                            </div>
+                        </div>
+                        <div class="ai-final-answer" style="margin-top: 14px; border-top: 1px dashed rgba(228,235,245,0.8); padding-top: 12px;">
+                            <p style="font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: var(--text-primary);"><b>郭总，以下为您分析的中东 GS8 库存深度诊断：</b></p>
+                            <div style="background: #fafbfc; border: 1px solid var(--border-light); padding: 12px; border-radius: 12px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                                <h4 style="color: var(--alert-orange); margin-bottom: 6px;"><i class="fa-solid fa-circle-exclamation"></i> 核心根源诊断：</h4>
+                                中东大区本月 GS8 库存为 <b>3,200辆</b>，周转天数已达 <b>65天</b>，严重超标。主要由于本月厂端到货高达 <b>2,500辆</b>，而终端零售仅 <b>1,480辆</b>，积压严重。
+                                <h4 style="color: var(--aurora-green); margin-top: 10px; margin-bottom: 6px;"><i class="fa-solid fa-lightbulb"></i> 调拨去库存策略建议：</h4>
+                                <ol style="margin-left: 20px; display:flex; flex-direction:column; gap:4px;">
+                                    <li><b>启动金融贴息</b>：引入往期效果最好的“零首付/零利息”政策，释放约 15% 潜在购买力；</li>
+                                    <li><b>厂端减产</b>：下月对中东区 GS8 排产下调 15%。</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 拼接会话二 (排产与到货剪刀差)
+            sessions[1].chatHtml = welcomeCardHTML + `
+                <div class="chat-bubble user">
+                    <div class="bubble-avatar"><img src="assets/user-avatar.png" alt="用户"></div>
+                    <div class="bubble-content">分析本月中东公司车型排产与实际到货差额</div>
+                </div>
+                <div class="chat-bubble bot" style="width: 100%;">
+                    <div class="bubble-avatar"><img src="assets/assistant-avatar.png" alt="AI"></div>
+                    <div class="bubble-content" style="max-width: 94%; flex: 1; background: #ffffff;">
+                        <div class="thinking-card" id="thinking-card-prefilled-2">
+                            <div class="thinking-card-header" onclick="toggleThinkingBody('thinking-card-prefilled-2')">
+                                <h4><img src="assets/icons/mode-thinking.svg" alt="CoT" style="animation:none;"> 智能体推理链 CoT 实时解析中...</h4>
+                                <i class="fa-solid fa-chevron-up toggle-icon" style="transform: rotate(0deg);"></i>
+                            </div>
+                            <div class="thinking-steps-container" id="steps-thinking-card-prefilled-2">
+                                <div class="thinking-step done"><div class="step-icon-dot">🧠</div><div class="step-body"><div class="step-title">【步骤一】载入用户大区记忆与画像</div><div class="step-desc">成功匹配郭总的中东大区排产与到货核算表查看偏好。</div></div></div>
+                                <div class="thinking-step done"><div class="step-icon-dot">🧐</div><div class="step-body"><div class="step-title">【步骤二】意图评估</div><div class="step-desc">识别目标：排产与实际到货差额归因。</div></div></div>
+                                <div class="thinking-step done"><div class="step-icon-dot">💻</div><div class="step-body"><div class="step-title">【步骤三】数仓 SQL 查询与装配</div><div class="step-desc">调用 StarRocks 物理数据库，拉取本月中东排产计划与到货报关表，完美对齐。</div></div></div>
+                            </div>
+                        </div>
+                        <div class="ai-final-answer" style="margin-top: 14px; border-top: 1px dashed rgba(228,235,245,0.8); padding-top: 12px;">
+                            <p style="font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: var(--text-primary);"><b>郭总，已为您归纳排产与实际到货的偏差分析：</b></p>
+                            <div style="background: #fafbfc; border: 1px solid var(--border-light); padding: 12px; border-radius: 12px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                                <h4 style="color: var(--alert-orange); margin-bottom: 6px;"><i class="fa-solid fa-circle-exclamation"></i> 剪刀差偏差分析：</h4>
+                                本月中东到货量（2,500辆）与终端零售量（1,480辆）产生了高达 **1,020辆** 的物流与动销剪刀差。其根本原因为：<b>海运船期异常集中到港</b>，使得 4 月底与 5 月初的两次海运合并在 5 月中旬集中靠港卸货，造成阶段性库存激增，并非终端动销大幅萎缩。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderHistoryDrawerList();
+            
+            // 默认加载第一个会话的 HTML 
+            historyBox.innerHTML = sessions[0].chatHtml;
+        }
+
+        // 渲染历史会话列表 (支持垃圾桶删除)
+        function renderHistoryDrawerList() {
+            const listContainer = historyDrawer.querySelector('.drawer-list');
+            listContainer.innerHTML = '';
+            sessions.forEach(s => {
+                const item = document.createElement('div');
+                item.className = `drawer-item ${s.id === currentSessionId ? 'active' : ''}`;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    loadHistorySession(s.id);
+                };
+                item.innerHTML = `
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="drawer-item-title">${s.title}</div>
+                        <div class="drawer-item-time">${s.time}</div>
+                    </div>
+                    <button class="delete-session-btn" onclick="confirmDeleteSession(event, '${s.id}')" title="删除会话">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        // ------------------------------------------
+        // 历史会话二阶删除与确认弹窗控制器
+        // ------------------------------------------
+        let sessionToDeleteId = null;
+
+        function confirmDeleteSession(event, sessionId) {
+            event.stopPropagation(); // 阻止触发加载会话
+            sessionToDeleteId = sessionId;
+
+            const modalBackdrop = document.getElementById('delete-modal-backdrop');
+            modalBackdrop.classList.add('active');
+
+            // 使用 addEventListener 替代直接赋值，避免重复绑定问题
+            const confirmBtn = document.getElementById('delete-modal-confirm-btn');
+            // 先移除旧的事件监听器（通过克隆方式）
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            // 重新绑定确认按钮事件
+            newConfirmBtn.addEventListener('click', executeDeleteSession);
+            // 将引用指向新按钮
+            confirmBtn = newConfirmBtn;
+        }
+
+        function closeDeleteModal() {
+            const modalBackdrop = document.getElementById('delete-modal-backdrop');
+            modalBackdrop.classList.remove('active');
+            sessionToDeleteId = null;
+        }
+
+        function executeDeleteSession() {
+            if (!sessionToDeleteId) return;
+            
+            const targetId = sessionToDeleteId;
+            closeDeleteModal();
+            
+            // 从内存列表中滤除
+            sessions = sessions.filter(s => s.id !== targetId);
+            
+            // 若被删除的是当前高亮激活会话，自动挑选另一会话
+            if (currentSessionId === targetId) {
+                if (sessions.length > 0) {
+                    currentSessionId = sessions[0].id;
+                    historyBox.innerHTML = sessions[0].chatHtml;
+                    if (sessions[0].hasCharts) {
+                        refreshDashboardDataSilently(sessions[0].chartsData);
+                    }
+                } else {
+                    // 若全部被删除，则自动创建一个干净的新建对话
+                    const welcomeCardHTML = document.getElementById('welcome-bubble').outerHTML;
+                    const newId = 'session-' + Date.now();
+                    const now = new Date();
+
+                    const emptySession = {
+                        id: newId,
+                        title: '新建对话会话',
+                        time: formatRelativeTime(now),
+                        chatHtml: welcomeCardHTML,
+                        hasCharts: false,
+                        chartsData: null
+                    };
+                    sessions.push(emptySession);
+                    currentSessionId = newId;
+                    historyBox.innerHTML = welcomeCardHTML;
+                }
+            }
+            
+            renderHistoryDrawerList();
+            showToast("🗑️ 历史会话已成功删除！");
+        }
+
+        // 历史记录自由切换（移除冗余气泡提示，保证页面纯净）
+        function loadHistorySession(sessionId) {
+            closeHistoryDrawer();
+            
+            // 1. 保存当前会话的最新 HTML 状态到 array 中
+            const activeSession = sessions.find(s => s.id === currentSessionId);
+            if (activeSession) {
+                activeSession.chatHtml = historyBox.innerHTML;
+            }
+
+            // 2. 加载目标会话
+            const targetSession = sessions.find(s => s.id === sessionId);
+            if (targetSession) {
+                currentSessionId = sessionId;
+                historyBox.innerHTML = targetSession.chatHtml;
+                renderHistoryDrawerList();
+                historyBox.scrollTop = historyBox.scrollHeight;
+
+                // 联动右侧看板与 ECharts
+                if (targetSession.hasCharts) {
+                    refreshDashboardDataSilently(targetSession.chartsData);
+                }
+            }
+        }
+
+        // 新建会话机制 (移除无意义的提示气泡)
+        function startNewChat(e) {
+            if (e) e.stopPropagation();
+            closeHistoryDrawer();
+            
+            // 1. 先保存当前会话
+            const activeSession = sessions.find(s => s.id === currentSessionId);
+            if (activeSession) {
+                activeSession.chatHtml = historyBox.innerHTML;
+            }
+
+            // 2. 创建新会话实例
+            const newId = 'session-' + Date.now();
+            const welcomeCardHTML = document.getElementById('welcome-bubble').outerHTML;
+            const now = new Date();
+
+            const newSession = {
+                id: newId,
+                title: '新建对话会话',
+                time: formatRelativeTime(now),
+                chatHtml: welcomeCardHTML,
+                hasCharts: false,
+                chartsData: null
+            };
+
+            sessions.unshift(newSession);
+            currentSessionId = newId;
+
+            // 3. 加载新界面
+            historyBox.innerHTML = welcomeCardHTML;
+            inputArea.value = '';
+            handleInputState();
+
+            renderHistoryDrawerList();
+        }
+
+        // ------------------------------------------
+        // 拖拽逻辑 (Draggable Floating Launcher)
+        // ------------------------------------------
+        let isDragging = false;
+        let hasDragged = false;
+        let dragStartX, dragStartY;
+        let originalLeft, originalTop;
+
+        launcher.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            hasDragged = false;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            const rect = launcher.getBoundingClientRect();
+            originalLeft = rect.left;
+            originalTop = rect.top;
+            launcher.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                hasDragged = true;
+            }
+            launcher.style.left = (originalLeft + dx) + 'px';
+            launcher.style.top = (originalTop + dy) + 'px';
+            launcher.style.bottom = 'auto';
+            launcher.style.right = 'auto';
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            launcher.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            const rect = launcher.getBoundingClientRect();
+            const width = window.innerWidth;
+            if (rect.left + 34 > width / 2) {
+                launcher.style.left = (width - 98) + 'px';
+            } else {
+                launcher.style.left = '32px';
+            }
+            // 拖拽结束后更新位置供点击检测使用
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+        });
+
+        // ------------------------------------------
+        // 双态模式流转控制器 (Workspace Toggle Flow)
+        // ------------------------------------------
+        function toggleWorkspace(e) {
+            // 如果刚刚发生了拖拽，则不触发点击打开/关闭工作区
+            if (hasDragged) return;
+            
+            isWorkspaceOpen = !isWorkspaceOpen;
+            if (isWorkspaceOpen) {
+                workspace.style.display = 'flex';
+                setTimeout(() => {
+                    workspace.style.opacity = '1';
+                    workspace.style.transform = 'scale(1)';
+                    initECharts();
+                }, 10);
+            } else {
+                closeWorkspaceDirectly();
+            }
+        }
+
+        // 独立折叠/关闭工作区动作逻辑 (100% 解决右上角 X 按钮无效问题，越过拖拽像素校验)
+        function closeWorkspaceDirectly(e) {
+            if (e) e.stopPropagation();
+            isWorkspaceOpen = false;
+            workspace.style.opacity = '0';
+            workspace.style.transform = 'scale(0.92)';
+            setTimeout(() => {
+                workspace.style.display = 'none';
+            }, 300);
+        }
+
+        // 切换全屏模式
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            if (isFullscreen) {
+                workspace.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                workspace.classList.add('fullscreen-state');
+                fullscreenIcon.className = 'fa-solid fa-compress';
+                setTimeout(() => {
+                    initECharts();
+                }, 510);
+            } else {
+                workspace.classList.remove('fullscreen-state');
+                fullscreenIcon.className = 'fa-solid fa-expand';
+                catalogDrawer.classList.remove('active');
+                closeHistoryDrawer();
+            }
+        }
+
+        function toggleCatalog() {
+            catalogDrawer.classList.toggle('active');
+        }
+
+        function toggleHistoryDrawer(e) {
+            if (e) e.stopPropagation();
+            isHistoryOpen = !isHistoryOpen;
+            if (isHistoryOpen) {
+                historyDrawer.classList.add('active');
+                drawerOverlay.classList.add('active');
+                historyToggleBtn.classList.add('active');
+            } else {
+                closeHistoryDrawer();
+            }
+        }
+
+        function closeHistoryDrawer() {
+            isHistoryOpen = false;
+            historyDrawer.classList.remove('active');
+            drawerOverlay.classList.remove('active');
+            historyToggleBtn.classList.remove('active');
+        }
+
+        // ------------------------------------------
+        // 联网搜索 Toggle (点亮/不点亮)
+        // ------------------------------------------
+        function toggleWebSearch() {
+            isWebSearchOn = !isWebSearchOn;
+            if (isWebSearchOn) {
+                webSearchPill.classList.add('active');
+            } else {
+                webSearchPill.classList.remove('active');
+            }
+        }
+
+        function handleInputState() {
+            const val = inputArea.value.trim();
+            if (val.length > 0) {
+                sendBtn.classList.add('active');
+            } else {
+                sendBtn.classList.remove('active');
+            }
+            // 自动调整输入框高度
+            inputArea.style.height = 'auto';
+            const newHeight = Math.min(inputArea.scrollHeight, 100);
+            inputArea.style.height = Math.max(34, newHeight) + 'px';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isWorkspaceOpen) {
+                if (isHistoryOpen) {
+                    closeHistoryDrawer();
+                } else if (isFullscreen) {
+                    toggleFullscreen();
+                } else {
+                    toggleWorkspace(e);
+                }
+            }
+            if (e.ctrlKey && e.key === '/') {
+                e.preventDefault();
+                if (isWorkspaceOpen) {
+                    toggleFullscreen();
+                }
+            }
+        });
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendUserMessage();
+            }
+        }
+
+        function selectQuestion(text) {
+            inputArea.value = text;
+            handleInputState();
+            sendUserMessage();
+        }
+
+        // ------------------------------------------
+        // 智能体 ReAct 思维链流式运行模拟
+        // ------------------------------------------
+        function sendUserMessage() {
+            const val = inputArea.value.trim();
+            if (!val) return;
+            
+            closeHistoryDrawer();
+
+            // 1. 打印用户气泡
+            const userBubble = document.createElement('div');
+            userBubble.className = 'chat-bubble user';
+            userBubble.innerHTML = `
+                <div class="bubble-avatar"><img src="assets/user-avatar.png" alt="用户"></div>
+                <div class="bubble-content">${val}</div>
+            `;
+            historyBox.appendChild(userBubble);
+            inputArea.value = '';
+            handleInputState();
+            historyBox.scrollTop = historyBox.scrollHeight;
+
+            // 自动更新新会话名称 (如果是默认的新建对话)
+            const activeSession = sessions.find(s => s.id === currentSessionId);
+            if (activeSession && activeSession.title.includes('新建对话')) {
+                activeSession.title = val.substring(0, 18) + (val.length > 18 ? '...' : '');
+                renderHistoryDrawerList();
+            }
+
+            // 2. 实装优化一：取消自动强行全屏扩大屏幕！原汁原味维持用户当下的窗口模式。
+
+            // 3. 打印智能体思考发光卡片
+            setTimeout(() => {
+                renderThinkingStack(val);
+            }, 800);
+        }
+
+        function renderThinkingStack(query) {
+            const botBubble = document.createElement('div');
+            botBubble.className = 'chat-bubble bot';
+            botBubble.style.width = '100%';
+            
+            const cardId = 'thinking-card-' + Date.now();
+            botBubble.innerHTML = `
+                <div class="bubble-avatar"><img src="assets/assistant-avatar.png" alt="AI"></div>
+                <div class="bubble-content" style="max-width: 94%; flex: 1; background: #ffffff;">
+                    <div class="thinking-card" id="${cardId}">
+                        <div class="thinking-card-header" onclick="toggleThinkingBody('${cardId}')">
+                            <h4><img src="assets/icons/mode-thinking.svg" alt="CoT"> 智能体推理链 CoT 实时解析中...</h4>
+                            <i class="fa-solid fa-chevron-up toggle-icon"></i>
+                        </div>
+                        <div class="thinking-steps-container" id="steps-${cardId}">
+                            <!-- 步骤流逐步打印 -->
+                        </div>
+                    </div>
+                    <div class="ai-final-answer" id="answer-${cardId}" style="margin-top: 14px; display: none; border-top: 1px dashed rgba(228,235,245,0.8); padding-top: 12px;">
+                        <!-- 最终答案 -->
+                    </div>
+                </div>
+            `;
+            historyBox.appendChild(botBubble);
+            historyBox.scrollTop = historyBox.scrollHeight;
+
+            const stepsContainer = document.getElementById(`steps-${cardId}`);
+            
+            // 步骤1
+            setTimeout(() => {
+                appendStep(stepsContainer, 'active', '🧠', '【步骤一】载入用户大区记忆与画像', '锁定您中东公司总经理身份，自动加载其产销存分析表权限。已对齐“去库存/GS8车型”的长期偏好度。');
+            }, 500);
+
+            // 步骤2
+            setTimeout(() => {
+                const prev = stepsContainer.querySelector('.thinking-step:nth-child(1)');
+                if (prev) prev.className = 'thinking-step done';
+                appendStep(stepsContainer, 'active', '🧐', '【步骤二】意图二阶消解与 Skill 路由', '检测到核心意图为：【数据诊断分析】。选用本地 Skill [产销存诊断引擎] 挂载运行。');
+            }, 2000);
+
+            // 步骤3
+            setTimeout(() => {
+                const prev = stepsContainer.querySelector('.thinking-step:nth-child(2)');
+                if (prev) prev.className = 'thinking-step done';
+                let webSearchContext = "";
+                if (isWebSearchOn) {
+                    webSearchContext = "<br><span style='color: #0284c7;'><b>[🌐 联网搜索已点亮]</b> 实时检索 Tavily Search，召回 3 条最新中东竞品降价讯息（奇瑞瑞虎系列本月沙特限时促销 1.2 万沙特里亚尔）。</span>";
+                }
+                appendStep(stepsContainer, 'active', '🔍', '【步骤三】并发检索车型库与表 DDL', '多路并发请求 Dify Retrieve API 检索车型别名词典，召回建表 DDL并自动拼接口径。' + webSearchContext);
+            }, 3500);
+
+            // 步骤4
+            setTimeout(() => {
+                const prev = stepsContainer.querySelector('.thinking-step:nth-child(3)');
+                if (prev) prev.className = 'thinking-step done';
+                appendStep(stepsContainer, 'warning', '💻', '【步骤四】SQL 生成与数仓自愈调试 (重试中)', 
+                    `正在生成 SQL 并在沙盒中校验... 第一次执行出错！
+                    <div class="sql-sandbox">
+                        <div class="sql-sandbox-header">
+                            <span>SQL 校验异常: instore_qty 字段有歧义</span>
+                            <i class="fa-solid fa-copy" onclick="copyMockSQL(this)"></i>
+                        </div>
+                        <pre>SELECT model_name, SUM(stock_qty) as instore_qty FROM v_dm_sal_stock_dly a JOIN v_dm_sal_sc_order_dly b ON a.model_name = b.model_name WHERE area_name='中东公司' GROUP BY model_name;</pre>
+                    </div>
+                    <div style="color: var(--alert-orange); font-size: 11px; margin-top: 5px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <b>[Agent思维自愈中]</b> 检测到表联查中未指定表前缀导致歧义。已自动交由 [SQL_Repair_Skill] 自主修正重试...
+                    </div>`
+                );
+                historyBox.scrollTop = historyBox.scrollHeight;
+            }, 5500);
+
+            // 步骤5
+            setTimeout(() => {
+                const warningStep = stepsContainer.querySelector('.thinking-step.warning');
+                if (warningStep) warningStep.className = 'thinking-step done';
+                
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = 'color: var(--aurora-green); font-size: 12px; margin-left: 28px; margin-top: -6px; margin-bottom: 10px; font-weight:700;';
+                successMsg.innerHTML = `<i class="fa-solid fa-circle-check"></i> [自愈成功] 重试通过！SQL 已被自主校准，StarRocks 物理连接器运行成功，成功召回 15 行明细数据！`;
+                stepsContainer.appendChild(successMsg);
+                
+                appendStep(stepsContainer, 'active', '📊', '【步骤五】深度洞察与可视化装配', '成功将数据转化为 ECharts 配置 Options，右侧看板正自适应渲染更新。开始编译深度商业报告。');
+                historyBox.scrollTop = historyBox.scrollHeight;
+            }, 8500);
+
+            // 步骤6
+            setTimeout(() => {
+                const prev = stepsContainer.querySelector('.thinking-step:nth-child(5)');
+                if (prev) prev.className = 'thinking-step done';
+                
+                const headerIcon = document.getElementById(cardId).querySelector('h4 img');
+                if (headerIcon) headerIcon.style.animation = 'none';
+
+                const answerArea = document.getElementById(`answer-${cardId}`);
+                answerArea.style.display = 'block';
+                
+                let extraWebRecommendation = "";
+                if (isWebSearchOn) {
+                    extraWebRecommendation = "<li><b>联动奇瑞竞品对策</b>：鉴于联网搜索到奇瑞本期大额度促销，建议在中东同步推出“置换补贴”活动，阻击中高配客群流失。</li>";
+                }
+
+                // 根据用户输入的内容，动态分发不同的智能分析结论和决策报告！ (完美实现看板图标动态多态流转)
+                let chartsData = null;
+                const q = query.toUpperCase();
+                
+                if (q.includes('EMZOOM') || q.includes('速') || q.includes('影速')) {
+                    answerArea.innerHTML = `
+                        <p style="font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: var(--text-primary);">
+                            <b>郭总，已针对 EMZOOM (影速) 在中东各代理与分公司的周转数据为您跑通：</b>
+                        </p>
+                        <div style="background: #fafbfc; border: 1px solid var(--border-light); padding: 12px; border-radius: 12px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                            <h4 style="color: var(--aurora-green); margin-bottom: 6px;"><i class="fa-solid fa-circle-check"></i> EMZOOM 市场表现卓越：</h4>
+                            当前中东 EMZOOM 累计在库仅为 <b>580辆</b>，平均库存周转天数已降至 <b>12天</b>，处于<b>动销极速合理区间</b>。
+                            <h4 style="color: var(--alert-blue); margin-top: 10px; margin-bottom: 6px;"><i class="fa-solid fa-earth-americas"></i> 国家细分差异：</h4>
+                            其中沙特分公司贡献了 420辆 的月度零售，阿联酋与科威特销量保持平稳增幅。建议针对沙特网点追补 100 辆在途订单，防止旺季出现断货缺口！
+                        </div>
+                    `;
+                    chartsData = { kpi1: '12 天', kpi2: '动销极速', activeRow: 1, chartType: 'donut' };
+                } else if (q.includes('排产') || q.includes('物流') || q.includes('到货')) {
+                    answerArea.innerHTML = `
+                        <p style="font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: var(--text-primary);">
+                            <b>郭总，已启动中东大区物流计划与排产计划剪刀差的溯源剖析：</b>
+                        </p>
+                        <div style="background: #fafbfc; border: 1px solid var(--border-light); padding: 12px; border-radius: 12px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                            <h4 style="color: var(--alert-orange); margin-bottom: 6px;"><i class="fa-solid fa-circle-exclamation"></i> 船期延迟与重叠：</h4>
+                            本月由于海运靠港船只极其不均衡，导致 4 月延迟货船与 5 月正常靠港船只在 5 月中旬**发生合并靠岸**，单周卸船入库暴涨 <b>1,020辆</b>，物流异常指数达 42天。
+                            <h4 style="color: var(--aurora-green); margin-top: 10px; margin-bottom: 6px;"><i class="fa-solid fa-lightbulb"></i> 锁仓自愈应对策略：</h4>
+                            建议立即对中东港口网点开通<b>经销商直拨锁仓功能</b>，缩短中间周转节点 3 天，缓解总仓积压。
+                        </div>
+                    `;
+                    chartsData = { kpi1: '42 天', kpi2: '30 天', activeRow: 1, chartType: 'area' };
+                } else {
+                    answerArea.innerHTML = `
+                        <p style="font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: var(--text-primary);">
+                            <b>郭总，已针对中东全车型的大盘数据为您输出对比深度报告：</b>
+                        </p>
+                        <div style="background: #fafbfc; border: 1px solid var(--border-light); padding: 12px; border-radius: 12px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                            <h4 style="color: var(--alert-blue); margin-bottom: 6px;"><i class="fa-solid fa-chart-simple"></i> 大盘车型对比：</h4>
+                            除 GS8 车型周转天数（65天）超标外，其余车型均在健康警戒线内。大盘加权平均周转天数目前为 <b>32天</b>。
+                            <h4 style="color: var(--aurora-green); margin-top: 10px; margin-bottom: 6px;"><i class="fa-solid fa-check"></i> 动销优先级：</h4>
+                            影速（EMZOOM）周转深度最佳。建议下周期资源倾斜分配上调，释放影酷（EMKOO）与影豹（EMPOW）的营销潜力。
+                        </div>
+                    `;
+                    chartsData = { kpi1: '32 天', kpi2: '45 天', activeRow: 2, chartType: 'horizontal-bar' };
+                }
+
+                historyBox.scrollTop = historyBox.scrollHeight;
+                
+                // 将最新 HTML 状态同步写入 array 
+                const activeSession = sessions.find(s => s.id === currentSessionId);
+                if (activeSession) {
+                    activeSession.chatHtml = historyBox.innerHTML;
+                    activeSession.hasCharts = true;
+                    activeSession.chartsData = chartsData;
+                }
+
+                refreshDashboardDataSilently(chartsData);
+            }, 10500);
+        }
+
+        // 添加步骤卡片
+        function appendStep(container, statusClass, emoji, title, desc) {
+            const step = document.createElement('div');
+            step.className = `thinking-step ${statusClass}`;
+            step.innerHTML = `
+                <div class="step-icon-dot">${emoji}</div>
+                <div class="step-body">
+                    <div class="step-title">${title}</div>
+                    <div class="step-desc">${desc}</div>
+                </div>
+            `;
+            container.appendChild(step);
+            historyBox.scrollTop = historyBox.scrollHeight;
+        }
+
+        // 思考链卡片折叠
+        function toggleThinkingBody(cardId) {
+            const steps = document.getElementById(`steps-${cardId}`);
+            const icon = document.getElementById(cardId).querySelector('.toggle-icon');
+            if (steps.style.display === 'none') {
+                steps.style.display = 'flex';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                steps.style.display = 'none';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // 复制模拟 SQL 
+        function copyMockSQL(icon) {
+            const code = icon.closest('.sql-sandbox').querySelector('pre').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast("SQL 语句已成功复制到剪贴板！");
+            });
+        }
+
+        // ------------------------------------------
+        // 右栏数据看板静默刷新与秒级加载还原 (100% Fidelity Restore)
+        // ------------------------------------------
+        function refreshDashboardDataSilently(chartsData) {
+            if (!chartsData) return;
+            document.getElementById("kpi-1").innerHTML = chartsData.kpi1;
+            document.getElementById("kpi-2").innerHTML = chartsData.kpi2;
+            
+            // KPI 卡片 3 & 4 动态容错赋值
+            if (chartsData.kpi3) {
+                document.getElementById("kpi-3").innerHTML = chartsData.kpi3;
+            } else {
+                document.getElementById("kpi-3").innerHTML = "1.25";
+            }
+            if (chartsData.kpi4) {
+                document.getElementById("kpi-4").innerHTML = chartsData.kpi4;
+            } else {
+                document.getElementById("kpi-4").innerHTML = "12 天";
+            }
+            
+            // 重设表格行背景高亮
+            const rows = document.querySelectorAll("#data-table tbody tr");
+            rows.forEach((r, idx) => {
+                if (idx === chartsData.activeRow) {
+                    r.style.background = "#fff8f6";
+                } else {
+                    r.style.background = "transparent";
+                }
+                r.style.transition = "background 0.3s";
+            });
+            
+            initEChartsCustomized(chartsData.activeRow, chartsData.chartType);
+        }
+
+        // ------------------------------------------
+        // ECharts 自适应渲染与动态多态多模态绘图
+        // ------------------------------------------
+        function initECharts() {
+            initEChartsCustomized(0, 'default');
+        }
+
+        function initEChartsCustomized(activeRow, chartType) {
+            const barDom = document.getElementById('bar-chart');
+            const lineDom = document.getElementById('line-chart');
+            
+            // 动态改变右侧图表卡片的 H3 标题，证明 AI 会根据意图自动切换排盘
+            const cardHeaders = document.querySelectorAll(".chart-card-header h3");
+            
+            if (chartType === 'donut') {
+                // 1. 【EMZOOM 国家销量占比环形图 + 单曲线趋势】
+                if (cardHeaders[0]) cardHeaders[0].innerHTML = "📊 EMZOOM 中东各代理商库存占比";
+                if (cardHeaders[1]) cardHeaders[1].innerHTML = "📈 EMZOOM 终端动销月度滚动趋势";
+                
+                if (barDom) {
+                    if (barChartInstance) barChartInstance.dispose();
+                    barChartInstance = echarts.init(barDom, null, { renderer: 'canvas' });
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'item' },
+                        legend: { bottom: '0%', textStyle: { color: '#4c5667' }, itemWidth: 8, itemHeight: 8 },
+                        series: [{
+                            name: '库存占比',
+                            type: 'pie',
+                            radius: ['38%', '65%'],
+                            avoidLabelOverlap: true,
+                            itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                            label: { show: true, fontSize: 10, color: '#4c5667' },
+                            data: [
+                                { value: 420, name: '沙特分公司', itemStyle: { color: '#10b981' } },
+                                { value: 290, name: '阿联酋代理', itemStyle: { color: '#3b82f6' } },
+                                { value: 180, name: '科威特网点', itemStyle: { color: '#f59e0b' } },
+                                { value: 110, name: '阿曼子公司', itemStyle: { color: '#8b5cf6' } }
+                            ]
+                        }]
+                    };
+                    barChartInstance.setOption(option);
+                }
+                
+                if (lineDom) {
+                    if (lineChartInstance) lineChartInstance.dispose();
+                    lineChartInstance = echarts.init(lineDom, null, { renderer: 'canvas' });
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis' },
+                        grid: { top: '15%', left: '10%', right: '5%', bottom: '20%' },
+                        xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        yAxis: { type: 'value', name: '车辆数 (辆)', axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        series: [{
+                            name: '零售量',
+                            type: 'line',
+                            data: [310, 340, 390, 480, 520],
+                            lineStyle: { width: 3, color: '#10b981' },
+                            itemStyle: { color: '#10b981' },
+                            smooth: true
+                        }]
+                    };
+                    lineChartInstance.setOption(option);
+                }
+            } else if (chartType === 'area') {
+                // 2. 【排产差额面积渐变图 + 延迟天数柱状图】
+                if (cardHeaders[0]) cardHeaders[0].innerHTML = "📊 中东大区排产计划与到货差额走势";
+                if (cardHeaders[1]) cardHeaders[1].innerHTML = "📈 海运船期异常到港时间剖析";
+                
+                if (barDom) {
+                    if (barChartInstance) barChartInstance.dispose();
+                    barChartInstance = echarts.init(barDom, null, { renderer: 'canvas' });
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis' },
+                        grid: { top: '15%', left: '10%', right: '5%', bottom: '15%' },
+                        xAxis: { type: 'category', boundaryGap: false, data: ['1月', '2月', '3月', '4月', '5月'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        yAxis: { type: 'value', name: '差额量 (辆)', axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        series: [{
+                            name: '排产剪刀差',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: { color: 'rgba(59, 130, 246, 0.18)' },
+                            data: [150, 220, 280, 510, 420],
+                            itemStyle: { color: '#3b82f6' }
+                        }]
+                    };
+                    barChartInstance.setOption(option);
+                }
+                
+                if (lineDom) {
+                    if (lineChartInstance) lineChartInstance.dispose();
+                    lineChartInstance = echarts.init(lineDom, null, { renderer: 'canvas' });
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis' },
+                        grid: { top: '15%', left: '10%', right: '5%', bottom: '20%' },
+                        xAxis: { type: 'category', data: ['准点', '延迟3天', '延迟7天', '延迟14天+'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        yAxis: { type: 'value', name: '船次占比', axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        series: [{
+                            name: '船只频数',
+                            type: 'bar',
+                            barWidth: '40%',
+                            data: [12, 18, 45, 25],
+                            itemStyle: { color: '#f59e0b' }
+                        }]
+                    };
+                    lineChartInstance.setOption(option);
+                }
+            } else if (chartType === 'horizontal-bar') {
+                // 3. 【横向车型对比条形图 + 区域大区柱状图】
+                if (cardHeaders[0]) cardHeaders[0].innerHTML = "📊 中东大区各车型平均库存深度对比";
+                if (cardHeaders[1]) cardHeaders[1].innerHTML = "📈 全球各大区子公司周转深度对比";
+                
+                if (barDom) {
+                    if (barChartInstance) barChartInstance.dispose();
+                    barChartInstance = echarts.init(barDom, null, { renderer: 'canvas' });
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                        grid: { top: '15%', left: '15%', right: '5%', bottom: '15%' },
+                        xAxis: { type: 'value', axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        yAxis: { type: 'category', data: ['EMPOW', 'EMKOO', 'EMZOOM', 'GS8'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        series: [{
+                            type: 'bar',
+                            barWidth: '45%',
+                            data: [
+                                { value: 18, itemStyle: { color: '#10b981' } },
+                                { value: 24, itemStyle: { color: '#3b82f6' } },
+                                { value: 12, itemStyle: { color: '#f59e0b' } },
+                                { value: 65, itemStyle: { color: '#ef4444' } }
+                            ]
+                        }]
+                    };
+                    barChartInstance.setOption(option);
+                }
+                
+                if (lineDom) {
+                    if (lineChartInstance) lineChartInstance.dispose();
+                    lineChartInstance = echarts.init(lineDom, null, { renderer: 'canvas' });
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis' },
+                        grid: { top: '15%', left: '10%', right: '5%', bottom: '20%' },
+                        xAxis: { type: 'category', data: ['中东区', '美洲区', '亚洲区', '非洲区'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        yAxis: { type: 'value', name: '周转天数', axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        series: [{
+                            name: '周转天数',
+                            type: 'bar',
+                            barWidth: '35%',
+                            data: [42, 28, 15, 33],
+                            itemStyle: { color: '#8b5cf6' }
+                        }]
+                    };
+                    lineChartInstance.setOption(option);
+                }
+            } else {
+                // 4. 默认双柱/折线混合对比大盘 (Session 1 & 2 默认样式)
+                if (cardHeaders[0]) cardHeaders[0].innerHTML = "📊 中东公司车型库存天数对比";
+                if (cardHeaders[1]) cardHeaders[1].innerHTML = "📈 中东大区 4 月到货量与零售走势对比";
+                
+                if (barDom) {
+                    if (barChartInstance) barChartInstance.dispose();
+                    barChartInstance = echarts.init(barDom, null, { renderer: 'canvas' });
+                    
+                    const gs8Val = activeRow === 0 ? 65 : 45;
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                        grid: { top: '15%', left: '10%', right: '5%', bottom: '15%' },
+                        xAxis: {
+                            type: 'category',
+                            data: ['GS8', 'EMZOOM', 'EMKOO', 'EMPOW'],
+                            axisLine: { lineStyle: { color: '#cbd5e1' } },
+                            axisLabel: { color: '#4c5667' }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: '库存天数 (天)',
+                            axisLine: { lineStyle: { color: '#cbd5e1' } },
+                            splitLine: { lineStyle: { color: '#f1f5f9' } },
+                            axisLabel: { color: '#4c5667' }
+                        },
+                        series: [{
+                            data: [
+                                { value: gs8Val, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: gs8Val > 50 ? '#e05e38' : '#3b82f6' }, { offset: 1, color: gs8Val > 50 ? '#f97316' : '#2563eb' }]) } },
+                                { value: 12, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#1bb96b' }, { offset: 1, color: '#10b981' }]) } },
+                                { value: 36, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#3b82f6' }, { offset: 1, color: '#2563eb' }]) } },
+                                { value: 28, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#1bb96b' }, { offset: 1, color: '#10b981' }]) } }
+                            ],
+                            type: 'bar',
+                            barWidth: '35%',
+                            markLine: { symbol: 'none', data: [{ yAxis: 30, name: '安全上限', lineStyle: { color: '#e05e38', type: 'dashed', width: 2 } }] }
+                        }]
+                    };
+                    barChartInstance.setOption(option);
+                }
+                
+                if (lineDom) {
+                    if (lineChartInstance) lineChartInstance.dispose();
+                    lineChartInstance = echarts.init(lineDom, null, { renderer: 'canvas' });
+                    const retailLine = activeRow === 0 ? [1100, 1350, 1500, 1420, 1480] : [1100, 1200, 1300, 1250, 1300];
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis' },
+                        legend: { data: ['到货量', '终端零售量'], textStyle: { color: '#4c5667' }, bottom: '0%' },
+                        grid: { top: '15%', left: '10%', right: '5%', bottom: '20%' },
+                        xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+                        yAxis: { type: 'value', name: '车辆数 (辆)', axisLine: { lineStyle: { color: '#cbd5e1' } }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+                        series: [
+                            { name: '到货量', type: 'bar', data: [1200, 1400, 1900, 2200, 2500], itemStyle: { color: 'rgba(37, 99, 235, 0.7)' } },
+                            { name: '终端零售量', type: 'line', data: retailLine, lineStyle: { width: 3, color: '#1bb96b' }, itemStyle: { color: '#1bb96b' }, smooth: true }
+                        ]
+                    };
+                    lineChartInstance.setOption(option);
+                }
+            }
+        }
+
+        // ------------------------------------------
+        // 表格排序
+        // ------------------------------------------
+        let sortDirections = [true, true, true, true, true];
+        function sortGrid(colIndex) {
+            const table = document.getElementById("data-table");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            
+            sortDirections[colIndex] = !sortDirections[colIndex];
+            const direction = sortDirections[colIndex] ? 1 : -1;
+            
+            rows.sort((a, b) => {
+                let cellA = a.cells[colIndex].innerText.replace(/,/g, '').replace(' 天', '');
+                let cellB = b.cells[colIndex].innerText.replace(/,/g, '').replace(' 天', '');
+                
+                if (!isNaN(cellA) && !isNaN(cellB)) {
+                    return (parseFloat(cellA) - parseFloat(cellB)) * direction;
+                }
+                return cellA.localeCompare(cellB, 'zh') * direction;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // ------------------------------------------
+        // 导出报表效果
+        // ------------------------------------------
+        function exportCSV() {
+            showToast("📥 郭总专属《中东GS8大区周转明细报表.xlsx》已智能打包并下载成功！");
+        }
+
+        function showToast(text) {
+            const box = document.getElementById('notification-box');
+            const boxText = document.getElementById('notification-text');
+            boxText.innerHTML = text;
+            box.classList.add('active');
+            setTimeout(() => {
+                box.classList.remove('active');
+            }, 3000);
+        }
+
+        // ------------------------------------------
+        // 页面初始化装配
+        // ------------------------------------------
+        window.addEventListener('DOMContentLoaded', () => {
+            initSessions();
+            initECharts();
+        });
+    </script>
+</body>
+</html>
