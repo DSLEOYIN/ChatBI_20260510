@@ -133,15 +133,16 @@
         }
         .badge-dot {
             position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 12px;
-            height: 12px;
+            top: 8px;
+            right: 8px;
+            width: 13px;
+            height: 13px;
             background: linear-gradient(180deg, #5ef0a2 0%, #1bb96b 100%);
             border-radius: 50%;
             border: 2px solid rgba(255,255,255,0.96);
             box-shadow: 0 0 0 4px rgba(30, 194, 110, 0.1);
-            z-index: 2;
+            z-index: 3;
+            pointer-events: none;
         }
 
         /* ==========================================
@@ -151,8 +152,8 @@
             position: fixed;
             bottom: 116px;
             right: 32px;
-            width: 680px;
-            height: 700px;
+            width: min(920px, calc(100vw - 40px));
+            height: min(740px, calc(100vh - 120px));
             border-radius: 28px;
             background: var(--bg-card);
             border: 1px solid var(--border-light);
@@ -179,7 +180,7 @@
            4. 左半栏：聊天对话流 (Left Panel - Chat Pane)
            ========================================== */
         .chat-pane {
-            width: 55%;
+            width: 45%;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -782,6 +783,291 @@
             color: #4b5563;
         }
 
+        /* 问数审计工作台 */
+        .ask-console {
+            flex: 1;
+            padding: 14px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .audit-welcome,
+        .run-summary-card,
+        .trace-timeline,
+        .node-detail-panel {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        }
+        .audit-welcome {
+            padding: 16px;
+        }
+        .audit-welcome h3 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .audit-welcome p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-bottom: 14px;
+        }
+        .audit-principles {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .audit-principle {
+            background: #f8fafc;
+            border: 1px solid #e8edf4;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 78px;
+        }
+        .audit-principle strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 11.5px;
+            margin-bottom: 4px;
+        }
+        .audit-principle span {
+            color: var(--text-muted);
+            font-size: 10.5px;
+            line-height: 1.35;
+        }
+        .run-summary-card {
+            padding: 14px;
+        }
+        .run-summary-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .run-query-label {
+            color: var(--text-muted);
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .run-query {
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+        .run-status-pill {
+            flex-shrink: 0;
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #bbf7d0;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .run-status-pill.running {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+        .run-status-pill.pending {
+            background: #f8fafc;
+            color: #64748b;
+            border-color: #e2e8f0;
+        }
+        .run-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .run-metric {
+            background: #fafbfc;
+            border: 1px solid #eef2f7;
+            border-radius: 10px;
+            padding: 9px;
+        }
+        .run-metric span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 10px;
+            margin-bottom: 3px;
+        }
+        .run-metric strong {
+            color: var(--text-primary);
+            font-size: 12px;
+        }
+        .trace-timeline {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .trace-node {
+            display: grid;
+            grid-template-columns: 28px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .trace-node:hover {
+            background: #f8fafc;
+            border-color: #e8edf4;
+        }
+        .trace-node.active {
+            background: #eef5ff;
+            border-color: #bfdbfe;
+        }
+        .trace-node.pending {
+            opacity: 0.55;
+        }
+        .trace-node.running {
+            background: #f0f7ff;
+            border-color: #93c5fd;
+        }
+        .trace-node.running .trace-index {
+            background: var(--electric-blue);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .trace-node.done .trace-index {
+            background: #0f172a;
+        }
+        .trace-index {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #111111;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+        }
+        .trace-main {
+            min-width: 0;
+        }
+        .trace-title-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 3px;
+        }
+        .trace-title {
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .trace-tool {
+            color: var(--text-muted);
+            font-size: 10px;
+            background: #f1f5f9;
+            border-radius: 5px;
+            padding: 2px 5px;
+        }
+        .trace-desc {
+            color: var(--text-secondary);
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        .trace-meta {
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 10.5px;
+            line-height: 1.4;
+        }
+        .node-detail-panel {
+            padding: 14px;
+        }
+        .node-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #edf2f7;
+            margin-bottom: 12px;
+        }
+        .node-detail-title {
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .node-detail-subtitle {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+        .io-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .io-block {
+            background: #f8fafc;
+            border: 1px solid #e8edf4;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .io-block-title {
+            padding: 8px 10px;
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 800;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+        }
+        .io-block pre {
+            margin: 0;
+            padding: 10px;
+            color: #334155;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 10.5px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 180px;
+            overflow: auto;
+        }
+        .view-mode-tabs {
+            display: flex;
+            gap: 6px;
+        }
+        .view-mode-tab {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 5px 9px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .view-mode-tab.active {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+
         /* 思维链发光卡片 */
         .thinking-card {
             background: rgba(245, 247, 250, 0.6);
@@ -1197,13 +1483,84 @@
         }
         .chart-card-dynamic .chart-container {
             flex: 1;
-            min-height: 200px;
+            height: 220px;
+            min-height: 220px;
+            width: 100%;
         }
 
         /* 表格卡片 */
         .table-card-dynamic .table-wrapper {
             max-height: 300px;
-            overflow-y: auto;
+            overflow: auto;
+            border: 1px solid #eef2f7;
+            border-radius: 10px;
+        }
+        .table-card-dynamic table {
+            width: 100%;
+            min-width: 520px;
+            border-collapse: collapse;
+            font-size: 11.5px;
+        }
+        .table-card-dynamic th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #475569;
+            text-align: left;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 9px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .table-card-dynamic td {
+            color: var(--text-secondary);
+            padding: 10px;
+            border-bottom: 1px solid #eef2f7;
+            white-space: nowrap;
+        }
+        .table-card-dynamic tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .table-card-dynamic tbody tr:hover {
+            background: #fbfdff;
+        }
+        .alert-tag,
+        .safe-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .alert-tag {
+            color: #b42318;
+            background: #fff1ef;
+            border: 1px solid #ffd4cc;
+        }
+        .safe-tag {
+            color: #047857;
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+        }
+
+        .cards-generating-state {
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 18px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cards-generating-state i {
+            color: var(--electric-blue);
+            animation: spin 1.6s linear infinite;
         }
 
         /* 文字结论卡片 */
@@ -1499,6 +1856,75 @@
         #notification-box i {
             color: var(--aurora-green);
         }
+
+        @media (max-width: 980px) {
+            #workspace-container {
+                right: 16px;
+                bottom: 96px;
+                width: calc(100vw - 32px);
+                height: min(720px, calc(100vh - 112px));
+            }
+            .chat-pane {
+                width: 42%;
+            }
+            .bi-canvas {
+                padding: 16px;
+            }
+            .canvas-header {
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .canvas-controls {
+                gap: 6px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .canvas-btn {
+                padding: 7px 10px;
+            }
+            .kpi-grid-card {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+            .kpi-grid-item .kpi-value {
+                font-size: 18px;
+            }
+            .chart-card-dynamic .chart-container {
+                height: 190px;
+                min-height: 190px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            #workspace-container {
+                inset: 12px;
+                width: auto;
+                height: auto;
+                border-radius: 22px;
+                flex-direction: column;
+            }
+            .chat-pane {
+                width: 100%;
+                height: 48%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+            .bi-canvas {
+                height: 52%;
+                min-height: 0;
+            }
+            #workspace-container.fullscreen-state .chat-pane {
+                width: 100%;
+            }
+            .audit-principles,
+            .run-metrics,
+            .kpi-grid-card {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .view-mode-tabs {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1507,8 +1933,8 @@
     <div id="chat-launcher" draggable="false">
         <div class="launcher-avatar-wrapper">
             <img src="assets/assistant-avatar.png" alt="AI 助手">
-            <div class="badge-dot"></div>
         </div>
+        <div class="badge-dot"></div>
     </div>
 
     <!-- 2. 全局通知 (Light Toast Notification) -->
@@ -1586,8 +2012,8 @@
                         <img src="assets/assistant-avatar.png" alt="AI 助手">
                     </div>
                     <div>
-                        <h3 class="panel-title">广汽国际 AI 助手</h3>
-                        <span class="panel-subtitle">层级推理数据决策中心 v2.0</span>
+                        <h3 class="panel-title">问数审计工作台</h3>
+                        <span class="panel-subtitle">Ask → Trace → Answer</span>
                     </div>
                 </div>
                 <div class="header-controls">
@@ -1606,27 +2032,44 @@
                 </div>
             </div>
 
-            <!-- 对话流历史 -->
-            <div class="chat-history" id="chat-history">
+            <!-- 问数运行轨迹 -->
+            <div class="chat-history ask-console" id="chat-history">
                 
-                <!-- AI 欢迎卡片模板 (将被 JS 作为新对话初始节点动态载入) -->
-                <div class="chat-bubble bot" id="welcome-bubble">
-                    <div class="bubble-avatar"><img src="assets/assistant-avatar.png" alt="AI"></div>
-                    <div class="bubble-content" style="max-width: 100%;">
-                        <div class="welcome-card">
-                            <h3><i class="fa-solid fa-brain" style="color: var(--electric-blue);"></i> 郭总，您好！我是您的专属商业决策助手</h3>
-                            <p>我已经调取了您的业务画像：<strong>专注中东公司产销存及周转看板</strong>。我将通过 ReAct 思维链检索 Dify 知识库，调度底层 MCP 工具进行 SQL 生成并启动自愈沙盒，为您提供深度 analysis。</p>
+                <!-- 初始审计台说明 (将被 JS 作为新对话初始节点动态载入) -->
+                <div class="audit-welcome" id="welcome-bubble">
+                    <h3><i class="fa-solid fa-route" style="color: var(--electric-blue);"></i> 从这里开始问数</h3>
+                    <p>左侧记录每次问数的执行链路，点击任一节点即可查看输入参数、输出参数、SQL、工具调用、耗时与修复记录；右侧只保留业务用户需要消费的答案和图表。</p>
+                    <div class="audit-principles">
+                        <div class="audit-principle">
+                            <strong>可追溯</strong>
+                            <span>每个指标都能回到口径、字段、SQL 与数据源。</span>
+                        </div>
+                        <div class="audit-principle">
+                            <strong>可复核</strong>
+                            <span>节点输入输出结构化展示，便于数据团队审查。</span>
+                        </div>
+                        <div class="audit-principle">
+                            <strong>结果清爽</strong>
+                            <span>右侧只呈现结论、图表、明细和行动建议。</span>
+                        </div>
+                    </div>
 
-                            <div class="recommendation-list">
-                                <div class="recommend-btn" onclick="selectQuestion('诊断中东公司 GS8 车型本月的库存异常并给出建议')">
-                                    <span><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--alert-orange); margin-right: 6px;"></i>诊断中东公司 GS8 本月库存周转天数异常</span>
-                                    <i class="fa-solid fa-chevron-right"></i>
-                                </div>
-                                <div class="recommend-btn" onclick="selectQuestion('分析本月中东公司车型排产与实际到货差额')">
-                                    <span><i class="fa-solid fa-chart-line" style="color: var(--aurora-green); margin-right: 6px;"></i>分析本月中东车型排产与实际到货剪刀差</span>
-                                    <i class="fa-solid fa-chevron-right"></i>
-                                </div>
-                            </div>
+                    <div class="recommendation-list">
+                        <div class="recommend-btn" onclick="selectQuestion('诊断中东公司 GS8 车型本月的库存异常并给出建议')">
+                            <span><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--alert-orange); margin-right: 6px;"></i>诊断中东公司 GS8 本月库存周转天数异常</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="recommend-btn" onclick="selectQuestion('分析本月中东公司车型排产与实际到货差额')">
+                            <span><i class="fa-solid fa-chart-line" style="color: var(--aurora-green); margin-right: 6px;"></i>分析本月中东车型排产与实际到货剪刀差</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="recommend-btn" onclick="selectQuestion('GS8 当前库存是多少，是否超过安全线')">
+                            <span><i class="fa-solid fa-gauge-high" style="color: var(--electric-blue); margin-right: 6px;"></i>查询 GS8 当前库存与安全线</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                        <div class="recommend-btn" onclick="selectQuestion('什么是库存周转天数，计算公式是什么')">
+                            <span><i class="fa-solid fa-book" style="color: var(--text-muted); margin-right: 6px;"></i>解释库存周转天数指标口径</span>
+                            <i class="fa-solid fa-chevron-right"></i>
                         </div>
                     </div>
                 </div>
@@ -1640,13 +2083,18 @@
                         <i class="fa-solid fa-globe"></i>
                         <span>联网搜索</span>
                     </div>
+                    <div class="view-mode-tabs" style="margin-left: auto;">
+                        <button class="view-mode-tab active" type="button">审计视图</button>
+                        <button class="view-mode-tab" type="button">业务视图</button>
+                        <button class="view-mode-tab" type="button">调试视图</button>
+                    </div>
                 </div>
                 <div class="input-wrapper">
                     <textarea id="chat-input" placeholder="向智能体提问（如：查询中东各车型库存）..." onkeydown="handleEnter(event)" oninput="handleInputState()"></textarea>
                     <button class="send-btn" id="send-btn" onclick="sendUserMessage()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
                 <div class="shortcut-tip">
-                    <span>快捷键: <kbd>Ctrl</kbd> + <kbd>/</kbd> 隐/显画布 | <kbd>Esc</kbd> 快速折叠工作区</span>
+                    <span>点击左侧节点查看 I/O 参数 | 右侧只看业务答案</span>
                 </div>
             </div>
 
@@ -1658,14 +2106,15 @@
             <!-- 看板头部 -->
             <div class="canvas-header">
                 <div class="canvas-header-left">
-                    <h2 id="canvas-title">智能数据看板</h2>
-                    <span class="canvas-subtitle" id="canvas-subtitle">根据您的问题动态生成</span>
+                    <h2 id="canvas-title">业务答案画布</h2>
+                    <span class="canvas-subtitle" id="canvas-subtitle">结论、图表、明细与建议</span>
                 </div>
                 <div class="canvas-controls">
                     <!-- 折叠/展开按钮 -->
                     <button class="canvas-btn" id="collapse-btn" onclick="toggleCanvasCollapse()" title="折叠/展开看板">
                         <i class="fa-solid fa-chevron-right" id="collapse-icon"></i>
                     </button>
+                    <button class="canvas-btn" onclick="toggleCardPool()"><i class="fa-solid fa-layer-group"></i> 卡片历史</button>
                     <button class="canvas-btn" onclick="toggleCatalog()"><i class="fa-solid fa-book"></i> 数据字典</button>
                     <button class="canvas-btn primary" onclick="exportCurrentCards()"><i class="fa-solid fa-download"></i> 导出</button>
                 </div>
@@ -2171,7 +2620,7 @@
         }
 
         // 渲染所有卡片到容器
-        function renderCards(cards) {
+        function renderCards(cards, options = {}) {
             const container = document.getElementById('cards-container');
             if (!container) return;
 
@@ -2212,7 +2661,42 @@
             });
 
             // 添加到卡片池
-            addToCardPool(cards);
+            if (!options.skipPool) {
+                addToCardPool(cards);
+            }
+        }
+
+        function showCardsGeneratingState() {
+            const container = document.getElementById('cards-container');
+            if (!container) return;
+            currentCards = [];
+            container.innerHTML = `
+                <div class="cards-generating-state">
+                    <i class="fa-solid fa-spinner"></i>
+                    <span>正在装配业务卡片：指标、图表、明细和建议会逐步出现在这里</span>
+                </div>
+            `;
+        }
+
+        function renderCardsProgressively(cards) {
+            clearCardAnimationTimers();
+            showCardsGeneratingState();
+            if (!cards || cards.length === 0) {
+                setTimeout(() => showCardsEmptyState(document.getElementById('cards-container')), 500);
+                return;
+            }
+
+            cards.forEach((_, index) => {
+                const timer = setTimeout(() => {
+                    const partialCards = cards.slice(0, index + 1);
+                    renderCards(partialCards, { skipPool: true });
+                    if (index === cards.length - 1) {
+                        currentCards = cards;
+                        addToCardPool(cards);
+                    }
+                }, 360 + index * 360);
+                cardAnimationTimers.push(timer);
+            });
         }
 
         // 渲染 ECharts 图表
@@ -2290,6 +2774,7 @@
             }
 
             chartInstance.setOption(option);
+            setTimeout(() => chartInstance.resize(), 60);
         }
 
         // 添加到卡片池
@@ -2333,7 +2818,7 @@
             const item = cardPool[index];
             if (!item) return;
 
-            renderCards(item.cards);
+            renderCards(item.cards, { skipPool: true });
             updateCanvasTitle('历史卡片: ' + item.title);
         }
 
@@ -2388,7 +2873,285 @@
             if (!container) return;
             showCardsEmptyState(container);
             currentCards = [];
-            updateCanvasTitle('智能数据看板', '根据您的问题动态生成');
+            updateCanvasTitle('业务答案画布', '结论、图表、明细与建议');
+        }
+
+        function refreshDashboardDataSilently() {
+            if (!currentRun) {
+                clearCards();
+                return;
+            }
+            renderCards(generateCardsByIntent(currentRun.intent, currentRun.query, ''), { skipPool: true });
+        }
+
+        let currentRun = null;
+        let runAnimationTimers = [];
+        let cardAnimationTimers = [];
+
+        function clearRunAnimationTimers() {
+            runAnimationTimers.forEach(timer => clearTimeout(timer));
+            runAnimationTimers = [];
+        }
+
+        function clearCardAnimationTimers() {
+            cardAnimationTimers.forEach(timer => clearTimeout(timer));
+            cardAnimationTimers = [];
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatJsonBlock(value) {
+            if (typeof value === 'string') return escapeHtml(value);
+            return escapeHtml(JSON.stringify(value, null, 2));
+        }
+
+        function createAuditRun(query, intent) {
+            const isRetailGap = /排产|物流|到货|差额|剪刀差/.test(query);
+            const entity = isRetailGap ? '中东公司全车型' : '中东公司 / GS8';
+            const metric = isRetailGap ? '排产-到货-零售差额' : '库存周转天数';
+            const sql = isRetailGap
+                ? `SELECT model_name, SUM(plan_qty) AS plan_qty, SUM(arrival_qty) AS arrival_qty, SUM(retail_qty) AS retail_qty\nFROM v_dm_sal_prod_arrival_m\nWHERE area_name = '中东公司' AND period_td = '2026-05'\nGROUP BY model_name\nORDER BY arrival_qty - retail_qty DESC;`
+                : `SELECT model_name, SUM(stock_qty) AS instore_qty, SUM(dlr_onway_qty) AS onway_qty,\n       SUM(retail_qty) AS retail_qty,\n       ROUND((SUM(stock_qty) + SUM(dlr_onway_qty)) / NULLIF(SUM(retail_qty) / 30, 0), 1) AS turnover_days\nFROM v_dm_sal_stock_dly\nWHERE area_name = '中东公司' AND model_name = 'GS8' AND period_td = '2026-05'\nGROUP BY model_name;`;
+
+            const rows = isRetailGap
+                ? [
+                    { model_name: 'GS8', plan_qty: 2200, arrival_qty: 2500, retail_qty: 1480, gap_qty: 1020 },
+                    { model_name: 'EMZOOM', plan_qty: 980, arrival_qty: 900, retail_qty: 1180, gap_qty: -280 }
+                ]
+                : [
+                    { model_name: 'GS8', instore_qty: 3200, onway_qty: 680, retail_qty: 1480, turnover_days: 65 }
+                ];
+
+            return {
+                id: 'run-' + Date.now(),
+                query,
+                intent,
+                owner: '中东公司总经理',
+                startedAt: formatRelativeTime(new Date()),
+                metrics: {
+                    nodes: 9,
+                    duration: '10.5s',
+                    rows: isRetailGap ? 12 : 15,
+                    confidence: isRetailGap ? '0.89' : '0.92'
+                },
+                nodes: [
+                    {
+                        title: '意图识别',
+                        tool: 'Intent Router',
+                        duration: '128ms',
+                        desc: `识别为 ${intent}，进入数据问答执行链。`,
+                        input: { query, userLocale: 'zh-CN', webSearch: isWebSearchOn },
+                        output: { intent, taskType: 'data_analysis', needsVisualization: intent !== IntentType.CHAT }
+                    },
+                    {
+                        title: '权限与用户画像',
+                        tool: 'Profile Memory',
+                        duration: '86ms',
+                        desc: '加载用户身份、可访问大区和默认数据口径。',
+                        input: { user: '郭总', query },
+                        output: { role: '中东公司总经理', areaScope: ['中东公司'], defaultPeriod: '2026-05', permission: 'passed' }
+                    },
+                    {
+                        title: '实体与指标解析',
+                        tool: 'Metric Parser',
+                        duration: '214ms',
+                        desc: '抽取车型、区域、时间与核心指标。',
+                        input: { query },
+                        output: { entity, metric, dimensions: ['area_name', 'model_name', 'period_td'], period: '2026-05' }
+                    },
+                    {
+                        title: '指标口径确认',
+                        tool: 'Metric Dictionary',
+                        duration: '310ms',
+                        desc: '匹配指标定义、计算公式和安全阈值。',
+                        input: { metric },
+                        output: {
+                            formula: isRetailGap ? 'gap_qty = arrival_qty - retail_qty' : 'turnover_days = (stock_qty + onway_qty) / (retail_qty / 30)',
+                            threshold: isRetailGap ? 'gap_qty > 500 进入预警' : 'turnover_days > 30 进入预警',
+                            source: 'Dify 知识库 / 指标字典'
+                        }
+                    },
+                    {
+                        title: '表与字段检索',
+                        tool: 'Dify Retrieve API',
+                        duration: '740ms',
+                        desc: '召回可用表、字段说明和 join 约束。',
+                        input: { entity, metric, dimensions: ['area_name', 'model_name', 'period_td'] },
+                        output: {
+                            tables: isRetailGap ? ['v_dm_sal_prod_arrival_m'] : ['v_dm_sal_stock_dly'],
+                            fields: isRetailGap ? ['plan_qty', 'arrival_qty', 'retail_qty'] : ['stock_qty', 'dlr_onway_qty', 'retail_qty'],
+                            ddlMatched: true
+                        }
+                    },
+                    {
+                        title: 'SQL 生成',
+                        tool: 'SQL Generator',
+                        duration: '520ms',
+                        desc: '根据口径、权限和字段约束生成可执行 SQL。',
+                        input: { metric, entity, period: '2026-05' },
+                        output: { sql }
+                    },
+                    {
+                        title: 'SQL 校验与自愈',
+                        tool: 'SQL Repair Skill',
+                        duration: '1.8s',
+                        desc: '校验字段歧义、空值除法和权限过滤。',
+                        input: { sql, validationRules: ['字段必须带业务口径', '除法必须 NULLIF', '必须过滤 area_name'] },
+                        output: { repaired: !isRetailGap, fixes: isRetailGap ? [] : ['为 retail_qty 分母增加 NULLIF 防止除零'], status: 'passed' }
+                    },
+                    {
+                        title: '数据查询',
+                        tool: 'StarRocks MCP',
+                        duration: '3.2s',
+                        desc: '执行 SQL 并返回结构化结果集。',
+                        input: { sql, connection: 'starrocks-prod-readonly', timeout: '30s' },
+                        output: { rowCount: rows.length, sampleRows: rows }
+                    },
+                    {
+                        title: '答案与可视化装配',
+                        tool: 'Answer Composer',
+                        duration: '2.1s',
+                        desc: '将查询结果转成结论、图表、表格和行动建议。',
+                        input: { rows, cardPolicy: 'business_user_facing' },
+                        output: {
+                            cards: isRetailGap ? ['KPI_GRID', 'CHART_LINE', 'TABLE', 'CONCLUSION'] : ['KPI_GRID', 'CHART_LINE', 'CHART_BAR', 'TABLE', 'CONCLUSION'],
+                            headline: isRetailGap ? '到货与零售存在 1,020 辆阶段性剪刀差。' : 'GS8 周转天数 65 天，超过安全线 116%。'
+                        }
+                    }
+                ]
+            };
+        }
+
+        function getAuditWelcomeHtml() {
+            const existingWelcome = document.getElementById('welcome-bubble');
+            return existingWelcome ? existingWelcome.outerHTML : `
+                <div class="audit-welcome" id="welcome-bubble">
+                    <h3><i class="fa-solid fa-route"></i> 从这里开始问数</h3>
+                    <p>左侧用于审计执行链，右侧用于查看业务答案。</p>
+                </div>
+            `;
+        }
+
+        function renderAuditWelcome() {
+            historyBox.innerHTML = getAuditWelcomeHtml();
+        }
+
+        function getNodeStatus(index, progressIndex) {
+            if (progressIndex >= runNodeCompleteIndex) return 'done';
+            if (index < progressIndex) return 'done';
+            if (index === progressIndex) return 'running';
+            return 'pending';
+        }
+
+        const runNodeCompleteIndex = 9999;
+
+        function renderAuditRun(run, progressIndex = runNodeCompleteIndex) {
+            currentRun = run;
+            const isComplete = progressIndex >= run.nodes.length - 1 || progressIndex === runNodeCompleteIndex;
+            const activeIndex = isComplete ? run.nodes.length - 1 : Math.max(0, progressIndex);
+            const statusText = isComplete ? '完成' : '运行中';
+            const statusClass = isComplete ? '' : 'running';
+            historyBox.innerHTML = `
+                <div class="run-summary-card">
+                    <div class="run-summary-top">
+                        <div>
+                            <div class="run-query-label">Current Ask</div>
+                            <div class="run-query">${escapeHtml(run.query)}</div>
+                        </div>
+                        <div class="run-status-pill ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="run-metrics">
+                        <div class="run-metric"><span>节点</span><strong>${isComplete ? run.metrics.nodes : activeIndex + 1}/${run.metrics.nodes}</strong></div>
+                        <div class="run-metric"><span>耗时</span><strong>${isComplete ? run.metrics.duration : '执行中'}</strong></div>
+                        <div class="run-metric"><span>返回行</span><strong>${isComplete ? run.metrics.rows : '--'}</strong></div>
+                        <div class="run-metric"><span>置信度</span><strong>${isComplete ? run.metrics.confidence : '计算中'}</strong></div>
+                    </div>
+                </div>
+                <div class="trace-timeline">
+                    ${run.nodes.map((node, index) => {
+                        const nodeStatus = isComplete ? 'done' : (index < activeIndex ? 'done' : index === activeIndex ? 'running' : 'pending');
+                        const metaText = nodeStatus === 'done' ? '已完成' : nodeStatus === 'running' ? '运行中' : '等待中';
+                        return `
+                        <div class="trace-node ${nodeStatus} ${index === activeIndex ? 'active' : ''}" onclick="selectTraceNode(${index})">
+                            <div class="trace-index">${String(index + 1).padStart(2, '0')}</div>
+                            <div class="trace-main">
+                                <div class="trace-title-row">
+                                    <div class="trace-title">${escapeHtml(node.title)}</div>
+                                    <div class="trace-tool">${escapeHtml(node.tool)}</div>
+                                </div>
+                                <div class="trace-desc">${escapeHtml(node.desc)}</div>
+                            </div>
+                            <div class="trace-meta">
+                                <div>${nodeStatus === 'pending' ? '--' : escapeHtml(node.duration)}</div>
+                                <div>${metaText}</div>
+                            </div>
+                        </div>
+                    `}).join('')}
+                </div>
+                <div class="node-detail-panel" id="node-detail-panel"></div>
+            `;
+            selectTraceNode(activeIndex, !isComplete && activeIndex < run.nodes.length - 1);
+        }
+
+        function selectTraceNode(index, isRunningNode = false) {
+            if (!currentRun || !currentRun.nodes[index]) return;
+            const node = currentRun.nodes[index];
+            document.querySelectorAll('.trace-node').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
+            });
+
+            const panel = document.getElementById('node-detail-panel');
+            if (!panel) return;
+            panel.innerHTML = `
+                <div class="node-detail-header">
+                    <div>
+                        <div class="node-detail-title">${String(index + 1).padStart(2, '0')} · ${escapeHtml(node.title)}</div>
+                        <div class="node-detail-subtitle">${escapeHtml(node.tool)} · ${escapeHtml(node.duration)} · 可复核节点输入输出</div>
+                    </div>
+                    <div class="run-status-pill ${isRunningNode ? 'running' : ''}">${isRunningNode ? 'running' : 'passed'}</div>
+                </div>
+                <div class="io-grid">
+                    <div class="io-block">
+                        <div class="io-block-title"><span>Input 参数</span><span>JSON</span></div>
+                        <pre>${formatJsonBlock(node.input)}</pre>
+                    </div>
+                    <div class="io-block">
+                        <div class="io-block-title"><span>Output 参数</span><span>JSON / SQL</span></div>
+                        <pre>${formatJsonBlock(node.output)}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAuditRunProgressively(run, cards, onDone) {
+            clearRunAnimationTimers();
+            clearCardAnimationTimers();
+            showCardsGeneratingState();
+
+            run.nodes.forEach((_, index) => {
+                const timer = setTimeout(() => {
+                    renderAuditRun(run, index);
+                    historyBox.scrollTop = historyBox.scrollHeight;
+
+                    if (index === run.nodes.length - 1) {
+                        const doneTimer = setTimeout(() => {
+                            renderAuditRun(run);
+                            renderCardsProgressively(cards);
+                            if (typeof onDone === 'function') onDone();
+                            historyBox.scrollTop = historyBox.scrollHeight;
+                        }, 420);
+                        runAnimationTimers.push(doneTimer);
+                    }
+                }, index * 420);
+                runAnimationTimers.push(timer);
+            });
         }
 
         // ------------------------------------------
@@ -2416,7 +3179,7 @@
 
         // 拼接初始会话一的 HTML (让历史记录随便切，而不是重新启动)
         function initSessions() {
-            const welcomeCardHTML = document.getElementById('welcome-bubble').outerHTML;
+            const welcomeCardHTML = getAuditWelcomeHtml();
             
             // 拼接会话一 (GS8 库存异常)
             sessions[0].chatHtml = welcomeCardHTML + `
@@ -2489,8 +3252,10 @@
 
             renderHistoryDrawerList();
             
-            // 默认加载第一个会话的 HTML 
-            historyBox.innerHTML = sessions[0].chatHtml;
+            // 默认进入新版问数审计台，而不是旧版聊天气泡流
+            renderAuditWelcome();
+            sessions[0].chatHtml = historyBox.innerHTML;
+            sessions[0].hasCharts = false;
         }
 
         // 渲染历史会话列表 (支持垃圾桶删除)
@@ -2536,8 +3301,6 @@
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
             // 重新绑定确认按钮事件
             newConfirmBtn.addEventListener('click', executeDeleteSession);
-            // 将引用指向新按钮
-            confirmBtn = newConfirmBtn;
         }
 
         function closeDeleteModal() {
@@ -2565,7 +3328,7 @@
                     }
                 } else {
                     // 若全部被删除，则自动创建一个干净的新建对话
-                    const welcomeCardHTML = document.getElementById('welcome-bubble').outerHTML;
+                    const welcomeCardHTML = getAuditWelcomeHtml();
                     const newId = 'session-' + Date.now();
                     const now = new Date();
 
@@ -2601,14 +3364,22 @@
             const targetSession = sessions.find(s => s.id === sessionId);
             if (targetSession) {
                 currentSessionId = sessionId;
-                historyBox.innerHTML = targetSession.chatHtml;
+                if (targetSession.auditRun) {
+                    renderAuditRun(targetSession.auditRun);
+                    const cards = generateCardsByIntent(targetSession.auditRun.intent, targetSession.auditRun.query, '');
+                    renderCards(cards);
+                } else if (targetSession.title && !targetSession.title.includes('新建对话')) {
+                    const intent = detectIntent(targetSession.title);
+                    const auditRun = createAuditRun(targetSession.title, intent);
+                    targetSession.auditRun = auditRun;
+                    renderAuditRun(auditRun);
+                    renderCards(generateCardsByIntent(intent, targetSession.title, ''));
+                } else {
+                    historyBox.innerHTML = targetSession.chatHtml;
+                    clearCards();
+                }
                 renderHistoryDrawerList();
                 historyBox.scrollTop = historyBox.scrollHeight;
-
-                // 联动右侧看板与 ECharts
-                if (targetSession.hasCharts) {
-                    refreshDashboardDataSilently(targetSession.chartsData);
-                }
             }
         }
 
@@ -2625,7 +3396,7 @@
 
             // 2. 创建新会话实例
             const newId = 'session-' + Date.now();
-            const welcomeCardHTML = document.getElementById('welcome-bubble').outerHTML;
+            const welcomeCardHTML = getAuditWelcomeHtml();
             const now = new Date();
 
             const newSession = {
@@ -2744,7 +3515,7 @@
                 setTimeout(() => {
                     // 全屏时重新渲染当前卡片
                     if (currentCards.length > 0) {
-                        renderCards(currentCards);
+                        renderCards(currentCards, { skipPool: true });
                     }
                 }, 510);
             } else {
@@ -2834,42 +3605,45 @@
             sendUserMessage();
         }
 
-        // ------------------------------------------
-        // 智能体 ReAct 思维链流式运行模拟
-        // ------------------------------------------
         function sendUserMessage() {
             const val = inputArea.value.trim();
             if (!val) return;
             
             closeHistoryDrawer();
-
-            // 1. 打印用户气泡
-            const userBubble = document.createElement('div');
-            userBubble.className = 'chat-bubble user';
-            userBubble.innerHTML = `
-                <div class="bubble-avatar"><img src="assets/user-avatar.png" alt="用户"></div>
-                <div class="bubble-content">${val}</div>
-            `;
-            historyBox.appendChild(userBubble);
+            clearRunAnimationTimers();
+            clearCardAnimationTimers();
             inputArea.value = '';
             handleInputState();
-            historyBox.scrollTop = historyBox.scrollHeight;
 
-            // 自动更新新会话名称 (如果是默认的新建对话)
-            const activeSession = sessions.find(s => s.id === currentSessionId);
-            if (activeSession && activeSession.title.includes('新建对话')) {
-                activeSession.title = val.substring(0, 18) + (val.length > 18 ? '...' : '');
-                renderHistoryDrawerList();
-            }
+            const intent = detectIntent(val);
+            const auditRun = createAuditRun(val, intent);
+            const cards = generateCardsByIntent(intent, val, '');
 
-            // 2. 实装优化一：取消自动强行全屏扩大屏幕！原汁原味维持用户当下的窗口模式。
+            const titleMap = {
+                'chat': '闲聊模式',
+                'simple_query': '数据查询结果',
+                'analysis': '分析报告',
+                'comparison': '对比分析',
+                'search': '联网搜索结果',
+                'definition': '指标定义',
+                'alert': '预警详情'
+            };
+            updateCanvasTitle('正在生成答案...', '左侧执行链动态推进，右侧卡片会逐步生成');
 
-            // 3. 打印智能体思考发光卡片
-            setTimeout(() => {
-                renderThinkingStack(val);
-            }, 800);
+            renderAuditRunProgressively(auditRun, cards, () => {
+                const activeSession = sessions.find(s => s.id === currentSessionId);
+                if (activeSession) {
+                    activeSession.title = val.substring(0, 18) + (val.length > 18 ? '...' : '');
+                    activeSession.chatHtml = historyBox.innerHTML;
+                    activeSession.hasCharts = cards.length > 0;
+                    activeSession.auditRun = auditRun;
+                    renderHistoryDrawerList();
+                }
+                updateCanvasTitle(titleMap[intent] || '业务答案画布', `右侧为用户可消费结果 · 左侧第 ${auditRun.nodes.length} 步可复核`);
+            });
         }
 
+        // 旧版流式思维链函数保留用于历史会话兼容，主交互已改为结构化 Run 审计台。
         function renderThinkingStack(query) {
             const botBubble = document.createElement('div');
             botBubble.className = 'chat-bubble bot';
