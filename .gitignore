@@ -1,0 +1,6 @@
+client/node_modules/
+client/dist/
+chatbi_mock.db
+server/chatbi_mock.db
+__pycache__/
+*.pyc
