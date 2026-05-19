@@ -2131,6 +2131,16 @@
             #workspace-container.fullscreen-state .chat-pane {
                 width: 100%;
             }
+            #workspace-container.report-focus .chat-pane {
+                width: 100%;
+                height: 0;
+                min-height: 0;
+                padding: 0;
+                border-bottom: none;
+            }
+            #workspace-container.report-focus .bi-canvas {
+                height: 100%;
+            }
             .audit-principles,
             .run-metrics,
             .kpi-grid-card {
@@ -2542,10 +2552,33 @@
         let isCanvasCollapsed = false;
         let isCardPoolOpen = false;
         let isReportFocused = false;
+        const renderedChartDoms = new Set();
+
+        function safeClassName(value, fallback = '') {
+            return /^[a-z0-9_-]+$/i.test(String(value || '')) ? String(value) : fallback;
+        }
+
+        function sanitizeFilename(value) {
+            return String(value || '明细数据')
+                .replace(/[\\/:*?"<>|]/g, '_')
+                .trim()
+                .slice(0, 80) || '明细数据';
+        }
+
+        function disposeRenderedCharts() {
+            if (typeof echarts !== 'undefined') {
+                renderedChartDoms.forEach(chartDom => {
+                    const instance = echarts.getInstanceByDom(chartDom);
+                    if (instance) instance.dispose();
+                });
+            }
+            renderedChartDoms.clear();
+        }
 
         // 根据用户问题判断意图类型
         function detectIntent(userInput) {
-            const input = userInput.toLowerCase();
+            const input = String(userInput || '').toLowerCase();
+            const isExplicitWebSearch = isWebSearchOn || /联网|互联网|网页|新闻|最新|搜索一下|网上|舆情|资讯/.test(input);
 
             // 闲聊类
             if (/^(你好|您好|早上好|下午好|晚上好|嗨|hey|hi|hello)/.test(input)) {
@@ -2553,12 +2586,22 @@
             }
 
             // 定义解释类
-            if (/什么是|定义|解释|概念|含义|周转天数.*是|库存.*是/.test(input)) {
+            if (/什么是|定义|解释|概念|含义|周转天数.*是/.test(input)) {
                 return IntentType.DEFINITION;
             }
 
-            // 搜索类
-            if (/搜索|查找|查询|新闻|最新/.test(input)) {
+            // 对比类
+            if (/对比|比较|差异|哪个好|剪刀差/.test(input)) {
+                return IntentType.COMPARISON;
+            }
+
+            // 分析类优先于预警，避免“诊断异常”只生成两张预警卡。
+            if (/分析|诊断|归因|原因|建议|策略|查看|看看|了解/.test(input)) {
+                return IntentType.ANALYSIS;
+            }
+
+            // 搜索类只处理明确外部信息诉求；普通“查询库存”仍走问数。
+            if (isExplicitWebSearch) {
                 return IntentType.SEARCH;
             }
 
@@ -2567,19 +2610,9 @@
                 return IntentType.ALERT;
             }
 
-            // 对比类
-            if (/对比|比较|差异|哪个好|差异/.test(input)) {
-                return IntentType.COMPARISON;
-            }
-
             // 简单查询类
-            if (/(多少|几个|是多少|有几个)/.test(input) && !/分析|诊断|对比/.test(input)) {
+            if (/(多少|几个|是多少|有几个|查询|查找)/.test(input)) {
                 return IntentType.SIMPLE_QUERY;
-            }
-
-            // 分析类 - 默认
-            if (/分析|诊断|查看|看看|了解|看看/.test(input)) {
-                return IntentType.ANALYSIS;
             }
 
             return IntentType.SIMPLE_QUERY;
@@ -2763,29 +2796,30 @@
         // 渲染单个卡片
         function renderCard(card, index) {
             const cardId = 'dynamic-card-' + Date.now() + '-' + index;
+            const title = escapeHtml(card.title);
 
             switch (card.type) {
                 case CardType.KPI_SINGLE:
                     return `
-                        <div class="dynamic-card kpi-single-card ${card.data.status}" style="animation-delay: ${index * 80}ms">
-                            <div class="kpi-label">${card.title}</div>
-                            <div class="kpi-value">${card.data.value}</div>
-                            <div class="kpi-sub">${card.data.sub}</div>
+                        <div class="dynamic-card kpi-single-card ${safeClassName(card.data.status, 'info')}" style="animation-delay: ${index * 80}ms">
+                            <div class="kpi-label">${title}</div>
+                            <div class="kpi-value">${escapeHtml(card.data.value)}</div>
+                            <div class="kpi-sub">${escapeHtml(card.data.sub)}</div>
                         </div>
                     `;
 
                 case CardType.KPI_GRID:
                     const itemsHtml = card.data.items.map(item => `
                         <div class="kpi-grid-item">
-                            <div class="kpi-label">${item.label}</div>
-                            <div class="kpi-value">${item.value}</div>
-                            <div class="kpi-trend ${item.trend}">${item.trendText}</div>
+                            <div class="kpi-label">${escapeHtml(item.label)}</div>
+                            <div class="kpi-value">${escapeHtml(item.value)}</div>
+                            <div class="kpi-trend ${safeClassName(item.trend)}">${escapeHtml(item.trendText)}</div>
                         </div>
                     `).join('');
                     return `
                         <div class="dynamic-card" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
-                                <h3><i class="fa-solid fa-gauge-high"></i> ${card.title}</h3>
+                                <h3><i class="fa-solid fa-gauge-high"></i> ${title}</h3>
                             </div>
                             <div class="kpi-grid-card">
                                 ${itemsHtml}
@@ -2799,29 +2833,29 @@
                     return `
                         <div class="dynamic-card chart-card-dynamic" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
-                                <h3><i class="fa-solid fa-chart-${card.type === CardType.CHART_BAR ? 'bar' : 'line'}"></i> ${card.title}</h3>
+                                <h3><i class="fa-solid fa-chart-${card.type === CardType.CHART_BAR ? 'bar' : 'line'}"></i> ${title}</h3>
                             </div>
                             <div class="chart-container" id="${chartId}"></div>
                         </div>
                     `;
 
                 case CardType.TABLE:
-                    const headerHtml = card.data.headers.map(h => `<th>${h}</th>`).join('');
+                    const headerHtml = card.data.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('');
                     const rowsHtml = card.data.rows.map(row => {
                         const cellsHtml = row.map((cell, i) => {
                             if (i === row.length - 1) {
                                 const tagClass = cell === 'alert' || cell === '严重超标' ? 'alert-tag' : 'safe-tag';
                                 const tagText = cell === 'alert' || cell === '严重超标' ? '严重超警戒线' : cell;
-                                return `<td><span class="${tagClass}">${tagText}</span></td>`;
+                                return `<td><span class="${tagClass}">${escapeHtml(tagText)}</span></td>`;
                             }
-                            return `<td>${cell}</td>`;
+                            return `<td>${escapeHtml(cell)}</td>`;
                         }).join('');
                         return `<tr>${cellsHtml}</tr>`;
                     }).join('');
                     return `
                         <div class="dynamic-card table-card-dynamic" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
-                                <h3><i class="fa-solid fa-table"></i> ${card.title}</h3>
+                                <h3><i class="fa-solid fa-table"></i> ${title}</h3>
                                 <div class="dynamic-card-actions">
                                     <button class="dynamic-card-action" type="button" onclick="downloadTableCard(${index})" title="下载明细 Excel"><i class="fa-solid fa-file-excel"></i></button>
                                 </div>
@@ -2836,13 +2870,13 @@
                     `;
 
                 case CardType.CONCLUSION:
-                    const suggestionsHtml = card.data.suggestions.map(s => `<li>${s}</li>`).join('');
+                    const suggestionsHtml = (card.data.suggestions || []).map(s => `<li>${escapeHtml(s)}</li>`).join('');
                     return `
                         <div class="dynamic-card conclusion-card" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
-                                <h3><i class="fa-solid fa-brain"></i> ${card.title}</h3>
+                                <h3><i class="fa-solid fa-brain"></i> ${title}</h3>
                             </div>
-                            <div class="conclusion-content">${card.data.content}</div>
+                            <div class="conclusion-content">${escapeHtml(card.data.content)}</div>
                             ${card.data.suggestions ? `
                                 <div class="conclusion-suggestions">
                                     <h4><i class="fa-solid fa-lightbulb"></i> 调拨去库存策略建议</h4>
@@ -2856,23 +2890,23 @@
                     return `
                         <div class="dynamic-card alert-card" style="animation-delay: ${index * 80}ms">
                             <div class="alert-header">
-                                <i class="fa-solid fa-triangle-exclamation"></i> ${card.title}
+                                <i class="fa-solid fa-triangle-exclamation"></i> ${title}
                             </div>
-                            <div class="alert-body">${card.data.message}</div>
+                            <div class="alert-body">${escapeHtml(card.data.message)}</div>
                         </div>
                     `;
 
                 case CardType.SEARCH:
                     const resultsHtml = card.data.results.map(r => `
                         <div class="search-result-item">
-                            <div class="search-result-title">${r.title}</div>
-                            <div class="search-result-snippet">${r.snippet}</div>
+                            <div class="search-result-title">${escapeHtml(r.title)}</div>
+                            <div class="search-result-snippet">${escapeHtml(r.snippet)}</div>
                         </div>
                     `).join('');
                     return `
                         <div class="dynamic-card search-card" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
-                                <h3><i class="fa-solid fa-globe"></i> ${card.title}</h3>
+                                <h3><i class="fa-solid fa-globe"></i> ${title}</h3>
                             </div>
                             <div class="search-results">${resultsHtml}</div>
                         </div>
@@ -2882,11 +2916,11 @@
                     return `
                         <div class="dynamic-card definition-card" style="animation-delay: ${index * 80}ms">
                             <div class="dynamic-card-header">
-                                <h3><i class="fa-solid fa-book"></i> ${card.title}</h3>
+                                <h3><i class="fa-solid fa-book"></i> ${title}</h3>
                             </div>
-                            <div class="definition-term">${card.data.term}</div>
-                            <div class="definition-text">${card.data.text}</div>
-                            <div class="definition-formula">${card.data.formula}</div>
+                            <div class="definition-term">${escapeHtml(card.data.term)}</div>
+                            <div class="definition-text">${escapeHtml(card.data.text)}</div>
+                            <div class="definition-formula">${escapeHtml(card.data.formula)}</div>
                         </div>
                     `;
 
@@ -2911,6 +2945,7 @@
         }
 
         function showCardsEmptyState(container) {
+            disposeRenderedCharts();
             container.innerHTML = '';
             const emptyState = getCardsEmptyState(container);
             emptyState.classList.remove('hidden');
@@ -2941,6 +2976,7 @@
             currentCards = cards;
 
             // 渲染卡片HTML
+            disposeRenderedCharts();
             const cardsHtml = cards.map((card, index) => renderCard(card, index)).join('');
             container.innerHTML = cardsHtml;
 
@@ -2967,6 +3003,7 @@
         function showCardsGeneratingState() {
             const container = document.getElementById('cards-container');
             if (!container) return;
+            disposeRenderedCharts();
             currentCards = [];
             container.innerHTML = `
                 <div class="cards-generating-state">
@@ -3000,20 +3037,50 @@
             });
         }
 
+        function renderStaticChartFallback(chartDom, chartType) {
+            const datasets = {
+                trend: [
+                    { label: '1月', value: 1200, color: '#2563eb' },
+                    { label: '2月', value: 1400, color: '#2563eb' },
+                    { label: '3月', value: 1900, color: '#2563eb' },
+                    { label: '4月', value: 2200, color: '#2563eb' },
+                    { label: '5月', value: 2500, color: '#2563eb' }
+                ],
+                default: [
+                    { label: 'GS8', value: 65, color: '#ef4444' },
+                    { label: 'EMZOOM', value: 12, color: '#10b981' },
+                    { label: 'EMKOO', value: 36, color: '#f59e0b' },
+                    { label: 'EMPOW', value: 28, color: '#10b981' }
+                ]
+            };
+            const data = chartType === 'trend' ? datasets.trend : datasets.default;
+            const maxValue = Math.max(...data.map(item => item.value), 1);
+            chartDom.innerHTML = `
+                <div style="height: 100%; min-height: 180px; display: flex; align-items: end; gap: 18px; padding: 24px 18px 20px; border-top: 1px solid #eef2f7;">
+                    ${data.map(item => `
+                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                            <div style="height: ${Math.max(12, Math.round(item.value / maxValue * 130))}px; width: min(56px, 70%); border-radius: 6px 6px 2px 2px; background: ${item.color}; box-shadow: 0 8px 16px rgba(15,23,42,0.08);"></div>
+                            <strong style="font-size: 12px; color: var(--text-primary);">${escapeHtml(item.value)}</strong>
+                            <span style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.label)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
         // 渲染 ECharts 图表
         function renderChart(chartId, chartType) {
             const chartDom = document.getElementById(chartId);
             if (!chartDom) return;
             if (typeof echarts === 'undefined') {
-                chartDom.innerHTML = `
-                    <div style="height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 12px;">
-                        图表引擎加载中，卡片数据已生成
-                    </div>
-                `;
+                renderStaticChartFallback(chartDom, chartType);
                 return;
             }
 
+            const oldInstance = echarts.getInstanceByDom(chartDom);
+            if (oldInstance) oldInstance.dispose();
             const chartInstance = echarts.init(chartDom, null, { renderer: 'canvas' });
+            renderedChartDoms.add(chartDom);
 
             let option;
             switch (chartType) {
@@ -3108,8 +3175,8 @@
 
             list.innerHTML = cardPool.map((item, index) => `
                 <div class="card-pool-item ${index === 0 ? 'active' : ''}" onclick="loadCardFromPool(${index})">
-                    <div class="card-pool-item-title">${item.title}</div>
-                    <div class="card-pool-item-preview">${item.time}</div>
+                    <div class="card-pool-item-title">${escapeHtml(item.title)}</div>
+                    <div class="card-pool-item-preview">${escapeHtml(item.time)}</div>
                 </div>
             `).join('');
         }
@@ -3184,15 +3251,6 @@
             }
         }
 
-        // 导出当前卡片（模拟）
-        function exportCurrentCards() {
-            if (currentCards.length === 0) {
-                showToast('当前没有可导出的数据');
-                return;
-            }
-            showToast('数据报表已智能打包并下载成功！');
-        }
-
         // 清除所有卡片
         function clearCards() {
             const container = document.getElementById('cards-container');
@@ -3220,7 +3278,7 @@
             const blob = new Blob(['\ufeff' + workbook], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `${card.title || '明细数据'}.xls`;
+            link.download = `${sanitizeFilename(card.title)}.xls`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -3243,6 +3301,35 @@
                 return;
             }
             renderCards(generateCardsByIntent(currentRun.intent, currentRun.query, ''), { skipPool: true });
+        }
+
+        function restoreCanvasAfterOpen() {
+            const activeSession = sessions.find(s => s.id === currentSessionId);
+            if (currentCards.length > 0) {
+                renderCards(currentCards, { skipPool: true });
+            } else if (activeSession?.auditRun) {
+                const cards = generateCardsByIntent(activeSession.auditRun.intent, activeSession.auditRun.query, '');
+                renderCards(cards, { skipPool: true });
+                updateCanvasTitle('业务答案画布', `右侧为用户可消费结果 · 左侧第 ${activeSession.auditRun.nodes.length} 步可复核`);
+            }
+
+            setTimeout(() => {
+                document.querySelectorAll('.chart-container').forEach(chartDom => {
+                    const instance = typeof echarts !== 'undefined' ? echarts.getInstanceByDom(chartDom) : null;
+                    if (instance) instance.resize();
+                });
+                updateWorkspaceMetrics();
+            }, 120);
+        }
+
+        function resetCanvasForNewSession() {
+            clearRunAnimationTimers();
+            clearCardAnimationTimers();
+            currentRun = null;
+            currentCards = [];
+            setReportFocus(false);
+            clearCards();
+            updateCanvasTitle('业务答案画布', '结论、图表、明细与建议');
         }
 
         let currentRun = null;
@@ -3658,19 +3745,33 @@
             sessions.forEach(s => {
                 const item = document.createElement('div');
                 item.className = `drawer-item ${s.id === currentSessionId ? 'active' : ''}`;
+                item.dataset.sessionId = s.id;
                 item.onclick = (e) => {
                     e.stopPropagation();
                     loadHistorySession(s.id);
                 };
-                item.innerHTML = `
-                    <div style="flex: 1; min-width: 0;">
-                        <div class="drawer-item-title">${s.title}</div>
-                        <div class="drawer-item-time">${s.time}</div>
-                    </div>
-                    <button class="delete-session-btn" onclick="confirmDeleteSession(event, '${s.id}')" title="删除会话">
-                        <i class="fa-regular fa-trash-can"></i>
-                    </button>
-                `;
+                const textWrap = document.createElement('div');
+                textWrap.style.cssText = 'flex: 1; min-width: 0;';
+
+                const title = document.createElement('div');
+                title.className = 'drawer-item-title';
+                title.textContent = s.title;
+
+                const time = document.createElement('div');
+                time.className = 'drawer-item-time';
+                time.textContent = s.time;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-session-btn';
+                deleteBtn.type = 'button';
+                deleteBtn.title = '删除会话';
+                deleteBtn.innerHTML = '<i class="fa-regular fa-trash-can"></i>';
+                deleteBtn.addEventListener('click', event => confirmDeleteSession(event, s.id));
+
+                textWrap.appendChild(title);
+                textWrap.appendChild(time);
+                item.appendChild(textWrap);
+                item.appendChild(deleteBtn);
                 listContainer.appendChild(item);
             });
         }
@@ -3715,9 +3816,12 @@
             if (currentSessionId === targetId) {
                 if (sessions.length > 0) {
                     currentSessionId = sessions[0].id;
-                    historyBox.innerHTML = sessions[0].chatHtml;
-                    if (sessions[0].hasCharts) {
-                        refreshDashboardDataSilently(sessions[0].chartsData);
+                    if (sessions[0].auditRun) {
+                        renderAuditRun(sessions[0].auditRun);
+                        renderCards(generateCardsByIntent(sessions[0].auditRun.intent, sessions[0].auditRun.query, ''), { skipPool: true });
+                    } else {
+                        historyBox.innerHTML = sessions[0].chatHtml;
+                        clearCards();
                     }
                 } else {
                     // 若全部被删除，则自动创建一个干净的新建对话
@@ -3798,7 +3902,8 @@
                 time: formatRelativeTime(now),
                 chatHtml: welcomeCardHTML,
                 hasCharts: false,
-                chartsData: null
+                chartsData: null,
+                auditRun: null
             };
 
             sessions.unshift(newSession);
@@ -3808,6 +3913,7 @@
             historyBox.innerHTML = welcomeCardHTML;
             inputArea.value = '';
             handleInputState();
+            resetCanvasForNewSession();
 
             renderHistoryDrawerList();
         }
@@ -3819,6 +3925,7 @@
         let hasDragged = false;
         let dragStartX, dragStartY;
         let originalLeft, originalTop;
+        let closeWorkspaceTimer = null;
 
         function clampLauncherPosition(left, top) {
             const margin = 8;
@@ -3913,13 +4020,18 @@
         // ------------------------------------------
         function toggleWorkspace(e) {
             // 如果刚刚发生了拖拽，则不触发点击打开/关闭工作区
-            if (hasDragged) {
+            if (hasDragged && isWorkspaceOpen) {
                 hasDragged = false;
                 return;
             }
+            hasDragged = false;
             
             isWorkspaceOpen = !isWorkspaceOpen;
             if (isWorkspaceOpen) {
+                if (closeWorkspaceTimer) {
+                    clearTimeout(closeWorkspaceTimer);
+                    closeWorkspaceTimer = null;
+                }
                 positionWorkspaceNearLauncher();
                 workspace.style.display = 'flex';
                 setTimeout(() => {
@@ -3927,7 +4039,7 @@
                     workspace.style.opacity = '1';
                     workspace.style.transform = 'scale(1)';
                     updateWorkspaceMetrics();
-                    clearCards(); // 清空旧卡片，等待用户新问题
+                    restoreCanvasAfterOpen();
                 }, 10);
             } else {
                 closeWorkspaceDirectly();
@@ -3938,14 +4050,18 @@
         function closeWorkspaceDirectly(e) {
             if (e) e.stopPropagation();
             isWorkspaceOpen = false;
+            isDragging = false;
+            hasDragged = false;
             catalogDrawer.classList.remove('active');
             const cardPoolDrawer = document.getElementById('card-pool-drawer');
             if (cardPoolDrawer) cardPoolDrawer.classList.remove('active');
             isCardPoolOpen = false;
             workspace.style.opacity = '0';
             workspace.style.transform = 'scale(0.92)';
-            setTimeout(() => {
+            if (closeWorkspaceTimer) clearTimeout(closeWorkspaceTimer);
+            closeWorkspaceTimer = setTimeout(() => {
                 workspace.style.display = 'none';
+                closeWorkspaceTimer = null;
             }, 300);
         }
 
@@ -4418,7 +4534,7 @@
         function showToast(text) {
             const box = document.getElementById('notification-box');
             const boxText = document.getElementById('notification-text');
-            boxText.innerHTML = text;
+            boxText.textContent = text;
             box.classList.add('active');
             setTimeout(() => {
                 box.classList.remove('active');
