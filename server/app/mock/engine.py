@@ -54,28 +54,162 @@ def build_sql(intent: Intent, query: str) -> str | None:
     )
 
 
-def visible_steps(intent: Intent) -> list[dict]:
+def visible_steps(intent: Intent, sql: str | None = None) -> list[dict]:
     base = [
-        {"name": "问题理解", "status": "done", "detail": "识别用户问题中的区域、车型、指标和时间范围。"},
-        {"name": "Skill 选择", "status": "done", "detail": skill_name(intent)},
+        {
+            "name": "问题理解",
+            "status": "done",
+            "detail": "识别用户问题中的区域、车型、指标和时间范围。",
+            "tool": "Intent Parser",
+            "duration": "180ms",
+            "input": {"query": "用户自然语言问题"},
+            "output": {"intent": intent, "entities": ["中东公司", "GS8", "本月"] if intent != "chat" else []},
+        },
+        {
+            "name": "Skill 选择",
+            "status": "done",
+            "detail": skill_name(intent),
+            "tool": "Skill Router",
+            "duration": "120ms",
+            "input": {"intent": intent},
+            "output": {"selectedSkill": skill_name(intent)},
+        },
     ]
     if intent == "chat":
-        return base + [{"name": "直接回答", "status": "done", "detail": "无需查询业务数据，画布保持空白。"}]
+        return base + [
+            {
+                "name": "直接回答",
+                "status": "done",
+                "detail": "无需查询业务数据，画布保持空白。",
+                "tool": "Answer Composer",
+                "duration": "260ms",
+                "input": {"needsData": False},
+                "output": {"canvasComponents": ["answer"]},
+            }
+        ]
     if intent == "definition":
         return base + [
-            {"name": "知识库检索", "status": "done", "detail": "mock Dify Retrieve 召回指标口径。"},
-            {"name": "画布装配", "status": "done", "detail": "生成指标定义卡。"},
+            {
+                "name": "知识库检索",
+                "status": "done",
+                "detail": "mock Dify Retrieve 召回指标口径。",
+                "tool": "Dify Retrieve MCP",
+                "duration": "640ms",
+                "input": {"keywords": ["库存周转天数", "计算公式"]},
+                "output": {"documents": 3, "topHit": "库存指标口径说明"},
+            },
+            {
+                "name": "画布装配",
+                "status": "done",
+                "detail": "生成指标定义卡。",
+                "tool": "Canvas Assembler",
+                "duration": "210ms",
+                "input": {"componentTypes": ["answer", "definition"]},
+                "output": {"status": "passed"},
+            },
         ]
     if intent == "search":
         return base + [
-            {"name": "联网搜索", "status": "done", "detail": "mock Tavily Search 返回外部资讯结果。"},
-            {"name": "画布装配", "status": "done", "detail": "生成搜索结果卡与引用来源。"},
+            {
+                "name": "联网搜索",
+                "status": "done",
+                "detail": "mock Tavily Search 返回外部资讯结果。",
+                "tool": "tavily-search.search_web",
+                "duration": "1.1s",
+                "input": {"search_depth": "advanced", "include_answer": True},
+                "output": {"results": 2, "sources": ["Mock News", "Mock Auto"]},
+            },
+            {
+                "name": "画布装配",
+                "status": "done",
+                "detail": "生成搜索结果卡与引用来源。",
+                "tool": "Canvas Assembler",
+                "duration": "240ms",
+                "input": {"componentTypes": ["answer", "search_results"]},
+                "output": {"status": "passed"},
+            },
         ]
-    return base + [
-        {"name": "SQL 生成", "status": "done", "detail": "生成只读 SELECT 查询，并默认折叠展示。"},
-        {"name": "SQL 执行", "status": "done", "detail": "mock 查询返回经营样例数据。"},
-        {"name": "数据解读", "status": "done", "detail": "生成用户可消费的结论和建议。"},
-        {"name": "画布装配", "status": "done", "detail": "生成 KPI、图表、明细和建议组件。"},
+    steps = base + [
+        {
+            "name": "SQL 生成",
+            "status": "done",
+            "detail": "生成只读 SELECT 查询，并默认折叠展示。",
+            "tool": "SQL Generator",
+            "duration": "520ms",
+            "input": {"metric": "库存/销量/目标达成", "period": "2026-05", "area": "中东公司"},
+            "output": {"sql": sql},
+        },
+    ]
+    if intent == "alert":
+        broken_sql = (
+            "SELECT model_name, SUM(stock_qty) AS instore_qty "
+            "FROM v_dm_sal_stock_dly a JOIN v_dm_sal_sc_order_dly b "
+            "ON a.model_name = b.model_name WHERE area_name = '中东公司' GROUP BY model_name;"
+        )
+        steps += [
+            {
+                "name": "SQL 校验异常",
+                "status": "warning",
+                "detail": "沙盒检测到 instore_qty 字段歧义，自动交由 SQL Repair Skill 修复。",
+                "tool": "SQL Sandbox",
+                "duration": "430ms",
+                "input": {"sql": broken_sql, "rules": ["字段必须带表别名", "除法必须 NULLIF", "必须过滤 area_name"]},
+                "output": {"error": "Column 'instore_qty' is ambiguous", "next": "SQL_Repair_Skill"},
+            },
+            {
+                "name": "SQL 自愈修复",
+                "status": "done",
+                "detail": "已补齐表别名、库存口径和 NULLIF 防除零保护，重试校验通过。",
+                "tool": "SQL Repair Skill",
+                "duration": "1.2s",
+                "input": {"failedSql": broken_sql},
+                "output": {
+                    "status": "passed",
+                    "repairedSql": "见下方最终 SQL 折叠面板",
+                    "fixes": ["a.instore_qty", "a.transit_qty", "NULLIF(last_30d_terminal_qty, 0)"],
+                },
+            },
+        ]
+    else:
+        steps.append(
+            {
+                "name": "SQL 校验",
+                "status": "done",
+                "detail": "校验字段、权限过滤和只读约束，沙盒一次通过。",
+                "tool": "SQL Sandbox",
+                "duration": "360ms",
+                "input": {"sql": sql, "rules": ["SELECT only", "area_name filter"]},
+                "output": {"status": "passed"},
+            }
+        )
+    return steps + [
+        {
+            "name": "SQL 执行",
+            "status": "done",
+            "detail": "mock 查询返回经营样例数据。",
+            "tool": "mock-mysql-query",
+            "duration": "780ms",
+            "input": {"connection": "mock-readonly", "timeout": "30s"},
+            "output": {"rowCount": 4, "sample": ["GS8", "EMZOOM", "EMKOO", "EMPOW"]},
+        },
+        {
+            "name": "数据解读",
+            "status": "done",
+            "detail": "生成用户可消费的结论和建议。",
+            "tool": "Answer Composer",
+            "duration": "690ms",
+            "input": {"rows": 4, "intent": intent},
+            "output": {"answer": build_answer(intent)},
+        },
+        {
+            "name": "画布装配",
+            "status": "done",
+            "detail": "生成 KPI、图表、明细和建议组件。",
+            "tool": "Canvas Assembler",
+            "duration": "410ms",
+            "input": {"schema": "structured-json-components"},
+            "output": {"componentCount": 6 if intent == "alert" else 5},
+        },
     ]
 
 
@@ -253,12 +387,13 @@ def build_canvas(intent: Intent) -> CanvasPayload:
 
 def build_result(request, conversation_id: str) -> ChatResult:
     intent = detect_intent(request.content, request.web_search)
+    sql = build_sql(intent, request.content)
     return ChatResult(
         conversation_id=conversation_id,
         intent=intent,
         answer=build_answer(intent),
-        visible_steps=visible_steps(intent),
-        sql=build_sql(intent, request.content),
+        visible_steps=visible_steps(intent, sql),
+        sql=sql,
         canvas=build_canvas(intent),
     )
 
