@@ -532,17 +532,17 @@ function App() {
 
       {open && (
         <main id="workspace-container" className={`workspace ${fullscreen ? "fullscreen fullscreen-state" : ""}`} ref={workspaceRef}>
-          <HistoryDrawer
-            active={drawerOpen}
-            history={history}
-            currentId={conversationId}
-            onClose={() => setDrawerOpen(false)}
-            onNew={newChat}
-            onLoad={loadHistory}
-            onDelete={removeHistory}
-            onPin={handlePinHistory}
-          />
           <section className="chatPane chat-pane">
+            <HistoryDrawer
+              active={drawerOpen}
+              history={history}
+              currentId={conversationId}
+              onClose={() => setDrawerOpen(false)}
+              onNew={newChat}
+              onLoad={loadHistory}
+              onDelete={removeHistory}
+              onPin={handlePinHistory}
+            />
 
             <header className="topbar panel-header">
               <div className="brand header-title-area">
