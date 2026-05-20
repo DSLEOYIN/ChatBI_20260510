@@ -68,6 +68,16 @@ export async function getSkills() {
   return response.json();
 }
 
+export async function pinConversation(id, pinned) {
+  const response = await fetch(`${API_BASE}/conversations/${id}/pin?pinned=${pinned ? "true" : "false"}`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error(`Pin failed: ${id}`);
+  }
+  return response.json();
+}
+
 export function absoluteApiPath(path) {
   if (!path) return "";
   if (path.startsWith("http")) return path;

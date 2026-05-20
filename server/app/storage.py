@@ -18,10 +18,15 @@ def init_db() -> None:
                 user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+                updated_at TEXT NOT NULL,
+                pinned INTEGER DEFAULT 0
             )
             """
         )
+        try:
+            conn.execute("ALTER TABLE conversations ADD COLUMN pinned INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS messages (
@@ -46,13 +51,14 @@ def connect() -> sqlite3.Connection:
 def create_conversation_record(conversation: dict) -> None:
     with _LOCK, connect() as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO conversations(id, user_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO conversations(id, user_id, title, created_at, updated_at, pinned) VALUES (?, ?, ?, ?, ?, ?)",
             (
                 conversation["id"],
                 conversation["user_id"],
                 conversation["title"],
                 conversation["created_at"],
                 conversation["updated_at"],
+                conversation.get("pinned", 0),
             ),
         )
 
@@ -60,7 +66,7 @@ def create_conversation_record(conversation: dict) -> None:
 def list_conversation_records(user_id: str) -> list[dict]:
     with connect() as conn:
         rows = conn.execute(
-            "SELECT id, user_id, title, created_at, updated_at FROM conversations WHERE user_id = ? ORDER BY updated_at DESC",
+            "SELECT id, user_id, title, created_at, updated_at, pinned FROM conversations WHERE user_id = ? ORDER BY pinned DESC, updated_at DESC",
             (user_id,),
         ).fetchall()
     return [dict(row) for row in rows]
@@ -69,7 +75,7 @@ def list_conversation_records(user_id: str) -> list[dict]:
 def get_conversation_record(conversation_id: str) -> dict | None:
     with connect() as conn:
         conversation = conn.execute(
-            "SELECT id, user_id, title, created_at, updated_at FROM conversations WHERE id = ?",
+            "SELECT id, user_id, title, created_at, updated_at, pinned FROM conversations WHERE id = ?",
             (conversation_id,),
         ).fetchone()
         if not conversation:
@@ -93,6 +99,11 @@ def get_conversation_record(conversation_id: str) -> dict | None:
 def delete_conversation_record(conversation_id: str) -> None:
     with _LOCK, connect() as conn:
         conn.execute("DELETE FROM conversations WHERE id = ?", (conversation_id,))
+
+
+def pin_conversation_record(conversation_id: str, pinned: bool) -> None:
+    with _LOCK, connect() as conn:
+        conn.execute("UPDATE conversations SET pinned = ? WHERE id = ?", (1 if pinned else 0, conversation_id))
 
 
 def append_exchange(conversation_id: str, user_content: str, result: dict) -> None:

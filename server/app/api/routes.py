@@ -12,6 +12,7 @@ from app.storage import (
     delete_conversation_record,
     get_conversation_record,
     list_conversation_records,
+    pin_conversation_record,
 )
 
 router = APIRouter(prefix="/api")
@@ -44,6 +45,12 @@ async def get_conversation(conversation_id: str):
 @router.delete("/conversations/{conversation_id}")
 async def delete_conversation(conversation_id: str):
     delete_conversation_record(conversation_id)
+    return {"ok": True}
+
+
+@router.post("/conversations/{conversation_id}/pin")
+async def pin_conversation(conversation_id: str, pinned: bool):
+    pin_conversation_record(conversation_id, pinned)
     return {"ok": True}
 
 

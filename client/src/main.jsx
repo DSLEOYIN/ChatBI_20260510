@@ -5,9 +5,9 @@ import {
   absoluteApiPath,
   deleteConversation,
   getConversation,
-  getSkills,
   listConversations,
   streamChat,
+  pinConversation,
 } from "./services/api";
 import "./styles.css";
 
@@ -82,12 +82,20 @@ const catalogDomains = [
 function App() {
   const workspaceRef = useRef(null);
   const answerTimerRef = useRef(null);
-  const dragRef = useRef({ active: false, moved: false, offsetX: 0, offsetY: 0 });
+  const dragRef = useRef({
+    active: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    originalLeft: 0,
+    originalTop: 0,
+    offsetX: 0,
+    offsetY: 0,
+  });
   const [open, setOpen] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sideDrawer, setSideDrawer] = useState(null);
-  const [sideDrawerStyle, setSideDrawerStyle] = useState({});
   const [launcherPosition, setLauncherPosition] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -98,45 +106,251 @@ function App() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
-  const [skills, setSkills] = useState([]);
   const [webSearch, setWebSearch] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
 
-  useEffect(() => {
-    refreshHistory();
-    getSkills().then(setSkills);
-  }, []);
+  const textareaRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [activeStep, setActiveStep] = useState(null);
 
   useEffect(() => {
-    const update = () => updateSideDrawerPosition();
-    update();
-    window.addEventListener("resize", update);
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const targetHeight = Math.min(textarea.scrollHeight, 100);
+    textarea.style.height = `${targetHeight}px`;
+  }, [input]);
+
+  useEffect(() => {
+    refreshHistory();
     return () => {
-      window.removeEventListener("resize", update);
       if (answerTimerRef.current) window.clearInterval(answerTimerRef.current);
     };
-  }, [open, fullscreen, sideDrawer]);
+  }, []);
+
+  async function handlePinHistory(id, pinned) {
+    try {
+      await pinConversation(id, pinned);
+      await refreshHistory();
+    } catch (error) {
+      console.error("Pin conversation failed:", error);
+    }
+  }
 
   async function refreshHistory() {
     setHistory(await listConversations());
   }
 
-  function updateSideDrawerPosition() {
+  function clampLauncherPosition(left, top) {
+    const margin = 8;
+    const launcherWidth = 68;
+    const launcherHeight = 68;
+    return {
+      left: Math.max(margin, Math.min(window.innerWidth - launcherWidth - margin, left)),
+      top: Math.max(margin, Math.min(window.innerHeight - launcherHeight - margin, top)),
+    };
+  }
+
+  function snapLauncherToEdge(currentLeft, currentTop) {
+    const margin = 8;
+    const launcherWidth = 68;
+    const snapLeft = currentLeft < (window.innerWidth - launcherWidth) / 2;
+    const finalLeft = snapLeft ? margin : window.innerWidth - launcherWidth - margin;
+    return { left: finalLeft, top: currentTop };
+  }
+
+  const updateWorkspaceCSSVariables = (rect) => {
+    const root = document.documentElement;
+    root.style.setProperty("--workspace-top", `${rect.top}px`);
+    root.style.setProperty("--workspace-right", `${window.innerWidth - rect.right}px`);
+    root.style.setProperty("--workspace-width", `${rect.width}px`);
+    root.style.setProperty("--workspace-height", `${rect.height}px`);
+  };
+
+  const updateWorkspaceMetricsFromDOM = () => {
     if (!workspaceRef.current) return;
     const rect = workspaceRef.current.getBoundingClientRect();
-    const top = Math.max(0, rect.top);
-    setSideDrawerStyle({
-      top: `${top}px`,
-      right: `${Math.max(12, window.innerWidth - rect.right)}px`,
-      width: `${Math.min(360, rect.width * 0.42)}px`,
-      height: `${Math.min(rect.height, window.innerHeight - top - 16)}px`,
-      maxHeight: `${window.innerHeight - top - 16}px`,
-    });
+    if (!rect.width || !rect.height) return;
+    updateWorkspaceCSSVariables(rect);
+  };
+
+  const positionWorkspaceNearLauncher = (customLauncherRect = null) => {
+    if (fullscreen || !workspaceRef.current) return;
+    const launcherEl = document.getElementById("chat-launcher");
+    if (!launcherEl) return;
+    const launcherRect = customLauncherRect || launcherEl.getBoundingClientRect();
+    const workspaceWidth = Math.min(920, window.innerWidth - 40);
+    const workspaceHeight = Math.min(740, window.innerHeight - 120);
+    const margin = 20;
+    const gap = 14;
+    const anchorX = launcherRect.left + launcherRect.width / 2;
+    const anchorY = launcherRect.top + launcherRect.height / 2;
+
+    let left = anchorX < window.innerWidth / 2 ? launcherRect.left : launcherRect.right - workspaceWidth;
+    let top = launcherRect.top - workspaceHeight - gap;
+    if (top < margin) top = launcherRect.bottom + gap;
+    if (top + workspaceHeight > window.innerHeight - margin) top = anchorY - workspaceHeight / 2;
+
+    left = Math.max(margin, Math.min(window.innerWidth - workspaceWidth - margin, left));
+    top = Math.max(margin, Math.min(window.innerHeight - workspaceHeight - margin, top));
+
+    workspaceRef.current.style.left = `${left}px`;
+    workspaceRef.current.style.top = `${top}px`;
+    workspaceRef.current.style.right = "auto";
+    workspaceRef.current.style.bottom = "auto";
+    const originX = Math.max(0, Math.min(workspaceWidth, anchorX - left));
+    const originY = Math.max(0, Math.min(workspaceHeight, anchorY - top));
+    workspaceRef.current.style.transformOrigin = `${originX}px ${originY}px`;
+
+    updateWorkspaceCSSVariables({ left, top, width: workspaceWidth, height: workspaceHeight, right: left + workspaceWidth });
+  };
+
+  useEffect(() => {
+    if (open) {
+      if (fullscreen) {
+        if (workspaceRef.current) {
+          workspaceRef.current.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+          workspaceRef.current.style.left = '20px';
+          workspaceRef.current.style.top = '20px';
+          workspaceRef.current.style.right = '20px';
+          workspaceRef.current.style.bottom = '20px';
+          workspaceRef.current.style.width = 'auto';
+          workspaceRef.current.style.height = 'auto';
+          workspaceRef.current.style.transformOrigin = 'center center';
+        }
+        updateWorkspaceMetricsFromDOM();
+        const t1 = setTimeout(updateWorkspaceMetricsFromDOM, 50);
+        const t2 = setTimeout(updateWorkspaceMetricsFromDOM, 360);
+        const t3 = setTimeout(updateWorkspaceMetricsFromDOM, 520);
+        return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+          clearTimeout(t3);
+        };
+      } else {
+        if (workspaceRef.current) {
+          workspaceRef.current.style.transition = '';
+          workspaceRef.current.style.width = '';
+          workspaceRef.current.style.height = '';
+        }
+        positionWorkspaceNearLauncher();
+        const t1 = setTimeout(() => positionWorkspaceNearLauncher(), 50);
+        const t2 = setTimeout(() => positionWorkspaceNearLauncher(), 360);
+        return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+        };
+      }
+    }
+  }, [open, fullscreen]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (open) {
+        if (fullscreen) {
+          updateWorkspaceMetricsFromDOM();
+        } else {
+          positionWorkspaceNearLauncher();
+        }
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [open, fullscreen]);
+
+  function handleLauncherPointerDown(event) {
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    dragRef.current = {
+      active: true,
+      moved: false,
+      startX: event.clientX,
+      startY: event.clientY,
+      originalLeft: rect.left,
+      originalTop: rect.top,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+    event.currentTarget.style.transition = "none";
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    window.addEventListener("pointermove", handleLauncherPointerMove);
+    window.addEventListener("pointerup", handleLauncherPointerUp, { once: true });
+  }
+
+  function handleLauncherPointerMove(event) {
+    if (!dragRef.current.active) return;
+    const dx = event.clientX - dragRef.current.startX;
+    const dy = event.clientY - dragRef.current.startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      dragRef.current.moved = true;
+    }
+    const targetLeft = dragRef.current.originalLeft + dx;
+    const targetTop = dragRef.current.originalTop + dy;
+    const clamped = clampLauncherPosition(targetLeft, targetTop);
+
+    setLauncherPosition(clamped);
+
+    if (open && !fullscreen) {
+      const launcherWidth = 68;
+      const launcherHeight = 68;
+      const launcherRect = {
+        left: clamped.left,
+        top: clamped.top,
+        width: launcherWidth,
+        height: launcherHeight,
+        right: clamped.left + launcherWidth,
+        bottom: clamped.top + launcherHeight,
+      };
+      positionWorkspaceNearLauncher(launcherRect);
+    }
+  }
+
+  function handleLauncherPointerUp(event) {
+    if (!dragRef.current.active) return;
+    dragRef.current.active = false;
+    window.removeEventListener("pointermove", handleLauncherPointerMove);
+
+    const launcherEl = document.getElementById("chat-launcher");
+    if (launcherEl) {
+      launcherEl.style.transition =
+        "left 0.28s cubic-bezier(0.16, 1, 0.3, 1), top 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s ease, border-radius 0.28s ease";
+    }
+
+    const rect = launcherEl
+      ? launcherEl.getBoundingClientRect()
+      : { left: event.clientX - dragRef.current.offsetX, top: event.clientY - dragRef.current.offsetY };
+    const clamped = clampLauncherPosition(rect.left, rect.top);
+    const snapped = snapLauncherToEdge(clamped.left, clamped.top);
+
+    setLauncherPosition(snapped);
+
+    if (open && !fullscreen) {
+      const launcherWidth = 68;
+      const launcherHeight = 68;
+      const launcherRect = {
+        left: snapped.left,
+        top: snapped.top,
+        width: launcherWidth,
+        height: launcherHeight,
+        right: snapped.left + launcherWidth,
+        bottom: snapped.top + launcherHeight,
+      };
+      positionWorkspaceNearLauncher(launcherRect);
+    }
+  }
+
+  function handleLauncherClick() {
+    if (dragRef.current.moved) {
+      dragRef.current.moved = false;
+      return;
+    }
+    setOpen((value) => !value);
   }
 
   function revealAnswer(text, apply) {
     if (answerTimerRef.current) window.clearInterval(answerTimerRef.current);
     let index = 0;
+    setIsTyping(true);
     apply("");
     answerTimerRef.current = window.setInterval(() => {
       index += 2;
@@ -144,6 +358,7 @@ function App() {
       if (index >= text.length) {
         window.clearInterval(answerTimerRef.current);
         answerTimerRef.current = null;
+        setIsTyping(false);
       }
     }, 28);
   }
@@ -159,40 +374,6 @@ function App() {
     }));
   }
 
-  function handleLauncherPointerDown(event) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    dragRef.current = {
-      active: true,
-      moved: false,
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top,
-    };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-    window.addEventListener("pointermove", handleLauncherPointerMove);
-    window.addEventListener("pointerup", handleLauncherPointerUp, { once: true });
-  }
-
-  function handleLauncherPointerMove(event) {
-    if (!dragRef.current.active) return;
-    const nextLeft = Math.min(Math.max(8, event.clientX - dragRef.current.offsetX), window.innerWidth - 76);
-    const nextTop = Math.min(Math.max(8, event.clientY - dragRef.current.offsetY), window.innerHeight - 76);
-    dragRef.current.moved = true;
-    setLauncherPosition({ left: nextLeft, top: nextTop });
-  }
-
-  function handleLauncherPointerUp() {
-    dragRef.current.active = false;
-    window.removeEventListener("pointermove", handleLauncherPointerMove);
-  }
-
-  function handleLauncherClick() {
-    if (dragRef.current.moved) {
-      dragRef.current.moved = false;
-      return;
-    }
-    setOpen((value) => !value);
-  }
-
   async function ask(text = input) {
     const content = text.trim();
     if (!content || loading) return;
@@ -202,6 +383,7 @@ function App() {
     setSql("");
     setCanvas({ ...emptyCanvas, title: "正在生成答案...", subtitle: "左侧执行链动态推进，右侧卡片会逐步生成" });
     setSteps([]);
+    setActiveStep(null);
     setMessages((items) => [...items, { role: "user", content }]);
 
     try {
@@ -218,7 +400,13 @@ function App() {
             setConversationId(event.data);
           }
           if (event.type === "step") {
-            setSteps((items) => [...items, event.data]);
+            setSteps((items) => {
+              const newItems = [...items, event.data];
+              if (event.data.status === "warning" || event.data.status === "error") {
+                setActiveStep(newItems.length - 1);
+              }
+              return newItems;
+            });
           }
           if (event.type === "sql") {
             setSql(event.data);
@@ -274,6 +462,7 @@ function App() {
     setCanvas(emptyCanvas);
     setSql("");
     setDrawerOpen(false);
+    setActiveStep(null);
   }
 
   async function loadHistory(id) {
@@ -325,7 +514,6 @@ function App() {
       </button>
 
       <WorkspaceSideDrawer
-        drawerStyle={sideDrawerStyle}
         type={sideDrawer}
         items={cardPool}
         onClose={() => setSideDrawer(null)}
@@ -353,6 +541,7 @@ function App() {
               onNew={newChat}
               onLoad={loadHistory}
               onDelete={removeHistory}
+              onPin={handlePinHistory}
             />
 
             <header className="topbar panel-header">
@@ -382,7 +571,7 @@ function App() {
               ))}
             </div>
 
-            <ExecutionPanel steps={steps} sql={sql} skills={skills} loading={loading} />
+            <ExecutionPanel steps={steps} sql={sql} loading={loading} activeStep={activeStep} setActiveStep={setActiveStep} />
 
             <footer className="composer chat-input-bar">
               <div className="input-toolbar">
@@ -393,6 +582,7 @@ function App() {
               </div>
               <div className="input-wrapper">
                 <textarea
+                  ref={textareaRef}
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -415,6 +605,7 @@ function App() {
 
           <Canvas
             payload={canvas}
+            isTyping={isTyping}
             onToggleCollapse={() => setFullscreen((value) => !value)}
             onOpenCatalog={() => setSideDrawer(sideDrawer === "catalog" ? null : "catalog")}
             onOpenPool={() => setSideDrawer(sideDrawer === "pool" ? null : "pool")}
@@ -447,7 +638,7 @@ function WelcomeCard({ onAsk }) {
   );
 }
 
-function HistoryDrawer({ active, history, currentId, onClose, onNew, onLoad, onDelete }) {
+function HistoryDrawer({ active, history, currentId, onClose, onNew, onLoad, onDelete, onPin }) {
   return (
     <>
       <div className={`drawerOverlay ${active ? "active" : ""}`} onClick={onClose} />
@@ -457,18 +648,49 @@ function HistoryDrawer({ active, history, currentId, onClose, onNew, onLoad, onD
           <button onClick={onClose}>×</button>
         </header>
         <div className="drawerNew">
-          <button onClick={onNew}>＋ 新建对话</button>
+          <button className="newChatBtn" onClick={onNew}>
+            <i className="fa-solid fa-plus" />
+            <span>新建对话</span>
+          </button>
         </div>
         <div className="drawerList">
           {history.length === 0 && <p className="muted">暂无历史会话</p>}
           {history.map((item) => (
-            <button className={`drawerItem ${item.id === currentId ? "active" : ""}`} key={item.id} onClick={() => onLoad(item.id)}>
-              <span>
-                <b>{item.title}</b>
+            <div
+              className={`drawerItem ${item.id === currentId ? "active" : ""} ${item.pinned ? "pinned" : ""}`}
+              key={item.id}
+              onClick={() => onLoad(item.id)}
+            >
+              <div className="drawerItemContent">
+                <b>
+                  {item.pinned && <i className="fa-solid fa-thumbtack pin-badge" title="已置顶" />}
+                  <span className="drawerItemTitle">{item.title}</span>
+                </b>
                 <small>{new Date(item.updated_at).toLocaleString()}</small>
-              </span>
-              <i onClick={(event) => onDelete(item.id, event)}>🗑</i>
-            </button>
+              </div>
+              <div className="drawerItemActions">
+                <button
+                  className={`pin-btn ${item.pinned ? "active" : ""}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onPin(item.id, !item.pinned);
+                  }}
+                  title={item.pinned ? "取消置顶" : "置顶会话"}
+                >
+                  <i className="fa-solid fa-thumbtack" />
+                </button>
+                <button
+                  className="delete-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete(item.id, event);
+                  }}
+                  title="删除会话"
+                >
+                  <i className="fa-solid fa-trash-can" />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       </aside>
@@ -495,9 +717,8 @@ function ConfirmModal({ open, title, message, onCancel, onConfirm }) {
   );
 }
 
-function ExecutionPanel({ steps, sql, skills, loading }) {
+function ExecutionPanel({ steps, sql, loading, activeStep, setActiveStep }) {
   const [showSql, setShowSql] = useState(false);
-  const [activeStep, setActiveStep] = useState(null);
   const selectedSkill = useMemo(() => {
     const skillStep = steps.find((step) => step.name === "Skill 选择");
     return skillStep?.detail || (loading ? "Agent 正在选择 Skill" : "等待提问");
@@ -527,12 +748,6 @@ function ExecutionPanel({ steps, sql, skills, loading }) {
           {showSql && <pre>{sql}</pre>}
         </div>
       )}
-      <details className="skills">
-        <summary>可用 Skill 注册表</summary>
-        {skills.map((skill) => (
-          <p key={skill.id}><b>{skill.name}</b> · {skill.tools.join(" / ")}</p>
-        ))}
-      </details>
     </aside>
   );
 }
@@ -559,8 +774,8 @@ function ExecutionStep({ active, index, onToggle, step }) {
         {active && hasDetail && (
           <span className="stepDetail">
             {step.tool && <span><strong>工具</strong>{step.tool}</span>}
-            {step.input && <span><strong>Input</strong><code>{formatJson(step.input)}</code></span>}
-            {step.output && <span><strong>Output</strong><code>{formatJson(step.output)}</code></span>}
+            {step.input && <span><strong>Input</strong><code dangerouslySetInnerHTML={{ __html: highlightJson(step.input) }} /></span>}
+            {step.output && <span><strong>Output</strong><code dangerouslySetInnerHTML={{ __html: highlightJson(step.output) }} /></span>}
           </span>
         )}
       </span>
@@ -568,9 +783,9 @@ function ExecutionStep({ active, index, onToggle, step }) {
   );
 }
 
-function formatJson(value) {
-  if (typeof value === "string") return value;
-  return JSON.stringify(
+function highlightJson(value) {
+  if (value === undefined || value === null) return "";
+  const str = typeof value === "string" ? value : JSON.stringify(
     value,
     (key, item) => {
       if (typeof item === "string" && item.length > 140) {
@@ -578,24 +793,46 @@ function formatJson(value) {
       }
       return item;
     },
-    2,
+    2
   );
+  
+  // 转义 HTML 符号以防注入
+  const escaped = str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  return escaped.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+    let cls = "json-number";
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = "json-key";
+      } else {
+        cls = "json-string";
+      }
+    } else if (/true|false/.test(match)) {
+      cls = "json-boolean";
+    } else if (/null/.test(match)) {
+      cls = "json-null";
+    }
+    return `<span class="${cls}">${match}</span>`;
+  });
 }
 
-function Canvas({ payload, onOpenCatalog, onOpenPool, onToggleCollapse }) {
+function Canvas({ payload, isTyping, onOpenCatalog, onOpenPool, onToggleCollapse }) {
   return (
     <section className="canvasPane bi-canvas">
       <header className="canvasHead canvas-header">
         <div className="canvas-header-left">
           <h2>{payload.title}</h2>
-          <span className="canvas-subtitle">{payload.subtitle}</span>
+          <span className={`canvas-subtitle ${isTyping ? "typing-caret" : ""}`}>{payload.subtitle}</span>
         </div>
         <div className="canvasActions canvas-controls">
           <button className="canvas-btn" onClick={onToggleCollapse} title="切换全屏/精简态" aria-label="切换全屏/精简态"><i className="fa-solid fa-angle-left" /><span>收起</span></button>
           <button className="canvas-btn" onClick={onOpenPool} title="卡片历史" aria-label="卡片历史"><i className="fa-solid fa-layer-group" /><span>卡片历史</span></button>
           <button className="canvas-btn" onClick={onOpenCatalog} title="可访问数据" aria-label="可访问数据"><i className="fa-solid fa-database" /><span>可访问数据</span></button>
-          <a className="canvas-btn primary" href={absoluteApiPath("/api/downloads/mock-detail.csv")} title="下载明细 Excel">
-            <img src="/assets/icons/file-excel.svg" alt="" /><span>明细Excel</span>
+          <a className="canvas-btn primary download-excel-btn" href={absoluteApiPath("/api/downloads/mock-detail.csv")} title="下载明细 Excel">
+            <i className="fa-solid fa-file-excel" /><span>下载明细</span>
           </a>
         </div>
       </header>
@@ -721,13 +958,21 @@ function Chart({ option }) {
   return <div className="chart" ref={ref} />;
 }
 
-function WorkspaceSideDrawer({ drawerStyle, type, items, onClose, onLoadCard }) {
-  const active = !!type;
+function WorkspaceSideDrawer({ type, items, onClose, onLoadCard }) {
   const [query, setQuery] = useState("");
-  if (type === "pool") {
-    return (
-      <aside className={`card-pool-drawer ${active ? "active" : ""}`} style={drawerStyle}>
-        <header className="card-pool-header"><span><i className="fa-solid fa-layer-group" /> 卡片历史</span><button className="header-btn" onClick={onClose}><i className="fa-solid fa-xmark" /></button></header>
+  const normalized = query.trim().toLowerCase();
+  const visibleDomains = catalogDomains.filter((domain) => {
+    const text = `${domain.name} ${domain.title} ${domain.type} ${domain.search} ${domain.fields.flat().join(" ")}`.toLowerCase();
+    return !normalized || text.includes(normalized);
+  });
+
+  return (
+    <>
+      <aside className={`card-pool-drawer ${type === "pool" ? "active" : ""}`}>
+        <header className="card-pool-header">
+          <span><i className="fa-solid fa-layer-group" /> 卡片历史</span>
+          <button className="header-btn" onClick={onClose}><i className="fa-solid fa-xmark" /></button>
+        </header>
         <div className="card-pool-list">
           {items.length === 0 && <p className="muted">暂无卡片历史</p>}
           {items.map((item, index) => (
@@ -738,51 +983,46 @@ function WorkspaceSideDrawer({ drawerStyle, type, items, onClose, onLoadCard }) 
           ))}
         </div>
       </aside>
-    );
-  }
-  if (type !== "catalog") return null;
-  const normalized = query.trim().toLowerCase();
-  const visibleDomains = catalogDomains.filter((domain) => {
-    const text = `${domain.name} ${domain.title} ${domain.type} ${domain.search} ${domain.fields.flat().join(" ")}`.toLowerCase();
-    return !normalized || text.includes(normalized);
-  });
-  return (
-    <aside className="catalog-drawer active" style={drawerStyle}>
-      <header className="catalog-header"><h3><i className="fa-solid fa-database" /> 可访问数据</h3><button className="header-btn" onClick={onClose}><i className="fa-solid fa-xmark" /></button></header>
-      <div className="catalog-summary">当前账号：中东公司总经理。这里展示已授权的数据资产，支持按英文表名、英文字段、中文名、业务别名和场景快速检索。</div>
-      <div className="catalog-filter">
-        <i className="fa-solid fa-magnifying-glass" />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索表、字段、维度、指标..." />
-      </div>
-      <div className="catalog-list">
-        <div className="catalog-section-title"><i className="fa-solid fa-table" /> 按业务场景分组的可访问表字段</div>
-        {visibleDomains.map((domain) => (
-          <details className="data-domain-card" open key={domain.name}>
-            <summary>
-              <div className="data-domain-title">
-                <strong>{domain.name}</strong>
-                <span>{domain.title}</span>
-              </div>
-              <div className="data-domain-meta">
-                <span className="catalog-item-type">{domain.type}</span>
-                <i className="fa-solid fa-chevron-down" />
-              </div>
-            </summary>
-            <div className="field-list">
-              {domain.fields.map(([name, desc, type]) => (
-                <div className="field-row" key={name}>
-                  <div>
-                    <div className="field-name">{name}</div>
-                    <div className="field-desc">{desc}</div>
-                  </div>
-                  <span className="catalog-item-type">{type}</span>
+      <aside className={`catalog-drawer ${type === "catalog" ? "active" : ""}`}>
+        <header className="catalog-header">
+          <h3><i className="fa-solid fa-database" /> 可访问数据</h3>
+          <button className="header-btn" onClick={onClose}><i className="fa-solid fa-xmark" /></button>
+        </header>
+        <div className="catalog-summary">当前账号：中东公司总经理。这里展示已授权的数据资产，支持按英文表名、英文字段、中文名、业务别名和场景快速检索。</div>
+        <div className="catalog-filter">
+          <i className="fa-solid fa-magnifying-glass" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索表、字段、维度、指标..." />
+        </div>
+        <div className="catalog-list">
+          <div className="catalog-section-title"><i className="fa-solid fa-table" /> 按业务场景分组的可访问表字段</div>
+          {visibleDomains.map((domain) => (
+            <details className="data-domain-card" open key={domain.name}>
+              <summary>
+                <div className="data-domain-title">
+                  <strong>{domain.name}</strong>
+                  <span>{domain.title}</span>
                 </div>
-              ))}
-            </div>
-          </details>
-        ))}
-      </div>
-    </aside>
+                <div className="data-domain-meta">
+                  <span className="catalog-item-type">{domain.type}</span>
+                  <i className="fa-solid fa-chevron-down" />
+                </div>
+              </summary>
+              <div className="field-list">
+                {domain.fields.map(([name, desc, type]) => (
+                  <div className="field-row" key={name}>
+                    <div>
+                      <div className="field-name">{name}</div>
+                      <div className="field-desc">{desc}</div>
+                    </div>
+                    <span className="catalog-item-type">{type}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      </aside>
+    </>
   );
 }
 
