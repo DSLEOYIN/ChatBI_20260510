@@ -374,6 +374,21 @@ function App() {
     }));
   }
 
+  function getAutoActiveStep(items) {
+    const index = items.findIndex((step) => step.status === "warning" || step.status === "error");
+    return index >= 0 ? index : null;
+  }
+
+  function makeCanvasCard(canvasPayload, timestamp = new Date().toISOString()) {
+    if (!canvasPayload?.components?.length) return null;
+    return {
+      id: `${timestamp}-${canvasPayload.title}`,
+      title: canvasPayload.title,
+      time: new Date(timestamp).toLocaleTimeString(),
+      canvas: canvasPayload,
+    };
+  }
+
   async function ask(text = input) {
     const content = text.trim();
     if (!content || loading) return;
@@ -433,10 +448,11 @@ function App() {
             setCanvas(payload);
             if (finalAnswer) revealAnswer(finalAnswer, updateFinalAnswer);
             if (event.data.components?.length) {
+              const card = makeCanvasCard(event.data);
               setCardPool((items) => [
-                { id: `${Date.now()}`, title: event.data.title, time: new Date().toLocaleTimeString(), canvas: event.data },
+                card,
                 ...items.slice(0, 9),
-              ]);
+              ].filter(Boolean));
             }
           }
         },
@@ -468,18 +484,36 @@ function App() {
   async function loadHistory(id) {
     const data = await getConversation(id);
     const restoredMessages = [];
+    const restoredCards = [];
+    let latestAssistant = null;
+
+    if (answerTimerRef.current) {
+      window.clearInterval(answerTimerRef.current);
+      answerTimerRef.current = null;
+    }
+    setIsTyping(false);
+
     data.messages.forEach((message) => {
       if (message.role === "user") {
         restoredMessages.push({ role: "user", content: message.content });
       } else {
-        setSteps(message.content.visible_steps || []);
-        setSql(message.content.sql || "");
-        setCanvas(message.content.canvas || emptyCanvas);
+        latestAssistant = message.content;
+        const card = makeCanvasCard(message.content.canvas, message.created_at);
+        if (card) restoredCards.unshift(card);
       }
     });
+
+    const restoredSteps = latestAssistant?.visible_steps || [];
     setConversationId(id);
     setMessages(restoredMessages);
+    setSteps(restoredSteps);
+    setSql(latestAssistant?.sql || "");
+    setCanvas(latestAssistant?.canvas || emptyCanvas);
+    setCardPool(restoredCards.slice(0, 10));
+    setActiveStep(getAutoActiveStep(restoredSteps));
+    setLoading(false);
     setDrawerOpen(false);
+    setSideDrawer(null);
   }
 
   async function removeHistory(id, event) {
@@ -571,7 +605,7 @@ function App() {
               ))}
             </div>
 
-            <ExecutionPanel steps={steps} sql={sql} loading={loading} activeStep={activeStep} setActiveStep={setActiveStep} />
+            <ExecutionPanel steps={steps} loading={loading} activeStep={activeStep} setActiveStep={setActiveStep} />
 
             <footer className="composer chat-input-bar">
               <div className="input-toolbar">
@@ -717,8 +751,7 @@ function ConfirmModal({ open, title, message, onCancel, onConfirm }) {
   );
 }
 
-function ExecutionPanel({ steps, sql, loading, activeStep, setActiveStep }) {
-  const [showSql, setShowSql] = useState(false);
+function ExecutionPanel({ steps, loading, activeStep, setActiveStep }) {
   const selectedSkill = useMemo(() => {
     const skillStep = steps.find((step) => step.name === "Skill 选择");
     return skillStep?.detail || (loading ? "Agent 正在选择 Skill" : "等待提问");
@@ -742,12 +775,6 @@ function ExecutionPanel({ steps, sql, loading, activeStep, setActiveStep }) {
           />
         ))}
       </div>
-      {sql && (
-        <div className="sqlBox">
-          <button onClick={() => setShowSql((value) => !value)}>{showSql ? "折叠 SQL" : "查看 SQL"}</button>
-          {showSql && <pre>{sql}</pre>}
-        </div>
-      )}
     </aside>
   );
 }

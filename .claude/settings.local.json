@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(pip install *)",
+      "Bash(uvicorn app.main:app --reload --port 8000)",
+      "Bash(cat /c/Users/yinyisi/AppData/Local/Temp/claude/d--AI------vide-coding-ChatBI-20260518/844db21f-bc4d-4337-a324-0db95f73b1a9/tasks/bo7puhe9p.output 2>/dev/null | tail -20)",
+      "Read(//c/Users/yinyisi/AppData/Local/Temp/claude/d--AI------vide-coding-ChatBI-20260518/844db21f-bc4d-4337-a324-0db95f73b1a9/tasks/**)",
+      "Bash(cat /c/Users/yinyisi/AppData/Local/Temp/claude/d--AI------vide-coding-ChatBI-20260518/844db21f-bc4d-4337-a324-0db95f73b1a9/tasks/bwl6yb34y.output 2>/dev/null | tail -20)",
+      "Bash(npm install *)",
+      "WebFetch(domain:localhost)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(curl -s http://localhost:5175)"
+    ]
+  }
+}

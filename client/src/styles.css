@@ -329,24 +329,6 @@ button { cursor: pointer; }
   color: var(--danger-red);
   background: #fee2e2;
 }
-.sqlBox { margin-top: 10px; }
-.sqlBox button {
-  border: 1px solid #dbe4ef;
-  border-radius: 9px;
-  padding: 6px 9px;
-  background: #f8fafc;
-}
-pre {
-  overflow: auto;
-  margin: 8px 0 0;
-  padding: 10px;
-  border-radius: 12px;
-  color: #dbeafe;
-  background: #111827;
-  font-size: 12px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-}
 .skills { margin-top: 10px; color: var(--text-secondary); font-size: 12px; }
 
 .composer,
