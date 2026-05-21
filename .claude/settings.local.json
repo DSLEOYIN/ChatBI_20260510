@@ -12,7 +12,11 @@
       "Bash(curl -s http://localhost:5173)",
       "Bash(taskkill /F /IM node.exe)",
       "Bash(curl -s http://localhost:5174)",
-      "Bash(curl -s http://localhost:5175)"
+      "Bash(curl -s http://localhost:5175)",
+      "Bash(python -c \"from langgraph.graph import StateGraph, END; print\\('LangGraph OK'\\)\")",
+      "Bash(python -m streamlit run \"d:/工作/大模型应用学习/ChatBI_20260509/cot_research/streamlit_langgraph.py\" --server.port 8506 --server.address localhost)",
+      "Bash(taskkill /F /FI \"WINDOWTITLE eq *8506*\")",
+      "Bash(python -m streamlit run \"d:/工作/大模型应用学习/ChatBI_20260509/cot_research/streamlit_langgraph.py\" --server.port 8507 --server.address localhost)"
     ]
   }
 }
