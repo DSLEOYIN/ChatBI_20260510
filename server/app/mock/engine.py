@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import AsyncIterator
 
+from app.mock.catalog import MOCK_SEARCH_RESULTS
 from app.models.schemas import CanvasPayload, ChatResult, ExecutionStep, Intent, StreamEvent
 
 
@@ -136,8 +137,13 @@ def visible_steps(intent: Intent, sql: str | None = None) -> list[ExecutionStep]
                 detail="mock Tavily Search 返回外部资讯结果。",
                 tool="tavily-search.search_web",
                 duration="1.1s",
-                input={"searchDepth": "advanced", "includeAnswer": True},
-                output={"resultCount": 2, "sources": ["Mock News", "Mock Auto"]},
+                input={"query": MOCK_SEARCH_RESULTS["query"], "searchDepth": "advanced", "includeAnswer": True},
+                output={
+                    "provider": MOCK_SEARCH_RESULTS["provider"],
+                    "resultCount": len(MOCK_SEARCH_RESULTS["results"]),
+                    "sources": [item["source"] for item in MOCK_SEARCH_RESULTS["results"]],
+                    "fallback": MOCK_SEARCH_RESULTS["fallback"],
+                },
             ),
             make_step(
                 name="画布装配",
@@ -333,12 +339,53 @@ def build_canvas(intent: Intent) -> CanvasPayload:
                     "type": "search_results",
                     "title": "外部市场信息",
                     "props": {
-                        "items": [
-                            {"title": "中东 SUV 市场促销力度提升", "source": "Mock News", "summary": "多品牌集中推出金融贴息与置换补贴。"},
-                            {"title": "竞品七座 SUV 强化保养礼包", "source": "Mock Auto", "summary": "售后权益成为高配车型成交拉动项。"},
-                        ]
+                        "query": MOCK_SEARCH_RESULTS["query"],
+                        "provider": MOCK_SEARCH_RESULTS["provider"],
+                        "items": MOCK_SEARCH_RESULTS["results"],
+                        "fallback": MOCK_SEARCH_RESULTS["fallback"],
                     },
                 }
+            ],
+        )
+    if intent == "simple_query":
+        return CanvasPayload(
+            title="业务答案画布",
+            subtitle="由 mock Agent 最终产物动态装配",
+            intent=intent,
+            components=[
+                {
+                    "id": "final-answer",
+                    "type": "answer",
+                    "title": "最终回答",
+                    "props": {"content": build_answer(intent)},
+                },
+                {
+                    "id": "single-kpi",
+                    "type": "kpi",
+                    "title": "核心指标",
+                    "props": {
+                        "label": "中东公司本月终端销量",
+                        "value": "4,860",
+                        "unit": "台",
+                        "trend": "目标达成率 91.6%",
+                        "status": "关注",
+                    },
+                },
+                {
+                    "id": "detail-table",
+                    "type": "table",
+                    "title": "车型明细",
+                    "props": {
+                        "download": "/api/downloads/mock-detail.csv",
+                        "columns": ["车型", "终端销量", "目标", "达成率", "库存"],
+                        "rows": [
+                            ["GS8", "920", "1,180", "78.0%", "1,280"],
+                            ["EMZOOM", "1,560", "1,420", "109.9%", "580"],
+                            ["EMKOO", "1,120", "1,300", "86.2%", "740"],
+                            ["EMPOW", "1,260", "1,405", "89.7%", "690"],
+                        ],
+                    },
+                },
             ],
         )
     components = [
@@ -432,6 +479,10 @@ def build_result(request, conversation_id: str) -> ChatResult:
         sql=sql,
         canvas=build_canvas(intent),
     )
+
+
+def mock_search(query: str) -> dict:
+    return {**MOCK_SEARCH_RESULTS, "query": query}
 
 
 async def stream_result(result: ChatResult) -> AsyncIterator[StreamEvent]:

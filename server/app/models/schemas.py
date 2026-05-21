@@ -34,8 +34,12 @@ class ChatRequest(BaseModel):
     web_search: bool = False
 
 
+StreamEventType = Literal["conversation_id", "step", "sql", "answer", "canvas", "done", "error"]
+CanvasComponentType = Literal["answer", "kpi", "kpi_grid", "chart", "table", "risk", "definition", "search_results", "insight"]
+
+
 class StreamEvent(BaseModel):
-    type: str
+    type: StreamEventType
     data: Any = None
 
 
@@ -51,7 +55,7 @@ class ExecutionStep(BaseModel):
 
 class CanvasComponent(BaseModel):
     id: str
-    type: str
+    type: CanvasComponentType
     title: str | None = None
     props: dict[str, Any] = Field(default_factory=dict)
 
@@ -70,3 +74,13 @@ class ChatResult(BaseModel):
     visible_steps: list[ExecutionStep]
     sql: str | None = None
     canvas: CanvasPayload
+
+
+class SearchMockResult(BaseModel):
+    query: str
+    provider: str = "mock-tavily"
+    search_depth: Literal["basic", "advanced"] = "advanced"
+    include_answer: bool = True
+    answer: str
+    results: list[dict[str, Any]] = Field(default_factory=list)
+    fallback: dict[str, Any] | None = None

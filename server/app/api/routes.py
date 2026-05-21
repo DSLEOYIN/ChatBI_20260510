@@ -3,9 +3,15 @@ import json
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
-from app.mock.catalog import DATA_ASSETS, SKILLS
-from app.mock.engine import build_result, detail_csv, make_conversation, stream_result
-from app.models.schemas import ChatRequest, ConversationCreate
+from app.mock.catalog import (
+    CANVAS_PAYLOAD_SCHEMA,
+    DATA_ASSETS,
+    DOWNLOAD_CONTRACT,
+    METRIC_DEFINITIONS,
+    SKILLS,
+)
+from app.mock.engine import build_result, detail_csv, make_conversation, mock_search, stream_result
+from app.models.schemas import ChatRequest, ConversationCreate, SearchMockResult
 from app.storage import (
     append_exchange,
     create_conversation_record,
@@ -61,7 +67,22 @@ async def skills():
 
 @router.get("/config/data-assets")
 async def data_assets():
-    return DATA_ASSETS
+    return {"assets": DATA_ASSETS, "metric_definitions": METRIC_DEFINITIONS}
+
+
+@router.get("/config/canvas-schema")
+async def canvas_schema():
+    return CANVAS_PAYLOAD_SCHEMA
+
+
+@router.get("/config/download-contract")
+async def download_contract():
+    return DOWNLOAD_CONTRACT
+
+
+@router.get("/mock/search", response_model=SearchMockResult)
+async def search_mock(q: str = "中东 SUV 市场 竞品 促销"):
+    return mock_search(q)
 
 
 @router.post("/chat")
@@ -79,10 +100,19 @@ async def chat_stream(payload: ChatRequest):
     save_exchange(conversation_id, payload.content, result.model_dump())
 
     async def event_source():
-        async for event in stream_result(result):
-            yield f"data: {json.dumps(event.model_dump(), ensure_ascii=False)}\n\n"
+        try:
+            async for event in stream_result(result):
+                payload_json = json.dumps(event.model_dump(), ensure_ascii=False)
+                yield f"event: {event.type}\ndata: {payload_json}\n\n"
+        except Exception as exc:
+            error = {"type": "error", "data": {"message": str(exc)}}
+            yield f"event: error\ndata: {json.dumps(error, ensure_ascii=False)}\n\n"
 
-    return StreamingResponse(event_source(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_source(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/downloads/mock-detail.csv")

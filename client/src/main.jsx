@@ -455,6 +455,9 @@ function App() {
               ].filter(Boolean));
             }
           }
+          if (event.type === "error") {
+            throw new Error(event.data?.message || "Stream returned error event");
+          }
         },
       );
       await refreshHistory();
@@ -849,8 +852,8 @@ function Canvas({ payload, isTyping, onOpenCatalog, onOpenPool, onToggleCollapse
           <button className="canvas-btn" onClick={onToggleCollapse} title="切换全屏/精简态" aria-label="切换全屏/精简态"><i className="fa-solid fa-angle-left" /><span>收起</span></button>
           <button className="canvas-btn" onClick={onOpenPool} title="卡片历史" aria-label="卡片历史"><i className="fa-solid fa-layer-group" /><span>卡片历史</span></button>
           <button className="canvas-btn" onClick={onOpenCatalog} title="可访问数据" aria-label="可访问数据"><i className="fa-solid fa-database" /><span>可访问数据</span></button>
-          <a className="canvas-btn primary download-excel-btn" href={absoluteApiPath("/api/downloads/mock-detail.csv")} title="下载明细 Excel">
-            <i className="fa-solid fa-file-excel" /><span>下载明细</span>
+          <a className="canvas-btn primary download-excel-btn" href={absoluteApiPath("/api/downloads/mock-detail.csv")} title="下载 CSV 明细">
+            <i className="fa-solid fa-file-csv" /><span>下载CSV</span>
           </a>
         </div>
       </header>
@@ -896,6 +899,18 @@ function CanvasComponent({ component, index }) {
       </article>
     );
   }
+  if (component.type === "kpi") {
+    return (
+      <article className="dynamicCard" style={style}>
+        <h3>▦ {component.title}</h3>
+        <div className="kpi">
+          <span>{component.props.label}</span>
+          <b>{component.props.value}<small>{component.props.unit}</small></b>
+          <em>{component.props.trend || component.props.status}</em>
+        </div>
+      </article>
+    );
+  }
   if (component.type === "chart") {
     return (
       <article className="dynamicCard wide" style={style}>
@@ -909,7 +924,7 @@ function CanvasComponent({ component, index }) {
       <article className="dynamicCard wide" style={style}>
         <div className="cardTitle">
           <h3>▤ {component.title}</h3>
-          <a href={absoluteApiPath(component.props.download)}>下载明细 Excel</a>
+          <a href={absoluteApiPath(component.props.download)}>下载 CSV 明细</a>
         </div>
         <table>
           <thead><tr>{component.props.columns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
