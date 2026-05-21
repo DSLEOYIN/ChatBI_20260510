@@ -812,16 +812,7 @@ function ExecutionStep({ active, index, onToggle, step }) {
 
 function highlightJson(value) {
   if (value === undefined || value === null) return "";
-  const str = typeof value === "string" ? value : JSON.stringify(
-    value,
-    (key, item) => {
-      if (typeof item === "string" && item.length > 140) {
-        return `${item.slice(0, 140)}...`;
-      }
-      return item;
-    },
-    2
-  );
+  const str = typeof value === "string" ? value : JSON.stringify(value, null, 2);
   
   // 转义 HTML 符号以防注入
   const escaped = str

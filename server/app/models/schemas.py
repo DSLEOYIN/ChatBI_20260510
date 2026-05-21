@@ -39,6 +39,16 @@ class StreamEvent(BaseModel):
     data: Any = None
 
 
+class ExecutionStep(BaseModel):
+    name: str
+    status: Literal["done", "warning", "error"]
+    detail: str
+    tool: str | None = None
+    duration: str | None = None
+    input: dict[str, Any] = Field(default_factory=dict)
+    output: dict[str, Any] = Field(default_factory=dict)
+
+
 class CanvasComponent(BaseModel):
     id: str
     type: str
@@ -57,6 +67,6 @@ class ChatResult(BaseModel):
     conversation_id: str
     intent: Intent
     answer: str
-    visible_steps: list[dict[str, Any]]
+    visible_steps: list[ExecutionStep]
     sql: str | None = None
     canvas: CanvasPayload
