@@ -486,17 +486,25 @@ def mock_search(query: str) -> dict:
 
 
 async def stream_result(result: ChatResult) -> AsyncIterator[StreamEvent]:
-    yield StreamEvent(type="conversation_id", data=result.conversation_id)
+    sequence = 1
+
+    def make_event(event_type: str, data=None) -> StreamEvent:
+        nonlocal sequence
+        event = StreamEvent(type=event_type, data=data, sequence=sequence, emitted_at=now_iso())
+        sequence += 1
+        return event
+
+    yield make_event("conversation_id", result.conversation_id)
     for step in result.visible_steps:
-        yield StreamEvent(type="step", data=step)
+        yield make_event("step", step)
         await asyncio.sleep(0.25)
     if result.sql:
-        yield StreamEvent(type="sql", data=result.sql)
+        yield make_event("sql", result.sql)
         await asyncio.sleep(0.15)
-    yield StreamEvent(type="answer", data=result.answer)
+    yield make_event("answer", result.answer)
     await asyncio.sleep(0.15)
-    yield StreamEvent(type="canvas", data=result.canvas.model_dump())
-    yield StreamEvent(type="done", data=None)
+    yield make_event("canvas", result.canvas.model_dump())
+    yield make_event("done", None)
 
 
 def make_conversation(user_id: str, title: str = "新对话") -> dict:

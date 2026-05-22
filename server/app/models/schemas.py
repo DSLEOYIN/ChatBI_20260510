@@ -41,6 +41,8 @@ CanvasComponentType = Literal["answer", "kpi", "kpi_grid", "chart", "table", "ri
 class StreamEvent(BaseModel):
     type: StreamEventType
     data: Any = None
+    sequence: int | None = None
+    emitted_at: str | None = None
 
 
 class ExecutionStep(BaseModel):

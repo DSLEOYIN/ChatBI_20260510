@@ -5,11 +5,12 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 
 from app.mock.catalog import (
     CANVAS_PAYLOAD_SCHEMA,
-    DATA_ASSETS,
     DOWNLOAD_CONTRACT,
-    METRIC_DEFINITIONS,
+    MOCK_API_CONTRACT,
     SKILLS,
+    STREAM_EVENT_CONTRACT,
 )
+from app.config_loader import load_data_catalog
 from app.mock.engine import build_result, detail_csv, make_conversation, mock_search, stream_result
 from app.models.schemas import ChatRequest, ConversationCreate, SearchMockResult
 from app.storage import (
@@ -19,6 +20,7 @@ from app.storage import (
     get_conversation_record,
     list_conversation_records,
     pin_conversation_record,
+    storage_metadata,
 )
 
 router = APIRouter(prefix="/api")
@@ -67,7 +69,7 @@ async def skills():
 
 @router.get("/config/data-assets")
 async def data_assets():
-    return {"assets": DATA_ASSETS, "metric_definitions": METRIC_DEFINITIONS}
+    return load_data_catalog()
 
 
 @router.get("/config/canvas-schema")
@@ -78,6 +80,26 @@ async def canvas_schema():
 @router.get("/config/download-contract")
 async def download_contract():
     return DOWNLOAD_CONTRACT
+
+
+@router.get("/config/stream-contract")
+async def stream_contract():
+    return STREAM_EVENT_CONTRACT
+
+
+@router.get("/config/mock-contract")
+async def mock_contract():
+    return {
+        **MOCK_API_CONTRACT,
+        "stream": STREAM_EVENT_CONTRACT,
+        "canvas": CANVAS_PAYLOAD_SCHEMA,
+        "download": DOWNLOAD_CONTRACT,
+    }
+
+
+@router.get("/config/storage")
+async def storage_config():
+    return storage_metadata()
 
 
 @router.get("/mock/search", response_model=SearchMockResult)

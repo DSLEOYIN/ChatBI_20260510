@@ -1,0 +1,447 @@
+{
+  "version": "2026-05-23.mock.v1",
+  "description": "ChatBI phase-1 data asset and metric definition catalog. This file is the first externalized replacement for hard-coded mock metadata.",
+  "assets": [
+    {
+      "table": "v_dm_sal_wolesale_terminal_dly",
+      "name": "批发终端日表",
+      "domain": "经营域",
+      "description": "批发量、终端量、区域/国家/车型分析。",
+      "aliases": [
+        "销量表",
+        "终端销量",
+        "批发终端",
+        "经营日报"
+      ],
+      "metric_paths": [
+        "终端销量",
+        "批发量",
+        "目标达成率"
+      ],
+      "fields": [
+        {
+          "name": "area_name",
+          "chinese_name": "区域名称",
+          "type": "dimension",
+          "example": "中东公司",
+          "aliases": [
+            "大区",
+            "子公司"
+          ]
+        },
+        {
+          "name": "country_name",
+          "chinese_name": "国家",
+          "type": "dimension",
+          "example": "沙特",
+          "aliases": [
+            "市场"
+          ]
+        },
+        {
+          "name": "model_name",
+          "chinese_name": "车型名称",
+          "type": "dimension",
+          "example": "GS8",
+          "aliases": [
+            "车型"
+          ]
+        },
+        {
+          "name": "terminal_qty",
+          "chinese_name": "终端销量",
+          "type": "metric",
+          "example": 920,
+          "aliases": [
+            "零售",
+            "终端"
+          ]
+        },
+        {
+          "name": "wholesale_qty",
+          "chinese_name": "批发量",
+          "type": "metric",
+          "example": 1040,
+          "aliases": [
+            "批售"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_wolesale_terminal_dly_v2",
+      "name": "批发终端预实表",
+      "domain": "经营域",
+      "description": "批发/终端实际与计划，用于达成率和目标差距分析。",
+      "aliases": [
+        "预实表",
+        "目标达成",
+        "销量计划"
+      ],
+      "metric_paths": [
+        "目标达成率",
+        "销量缺口",
+        "计划完成率"
+      ],
+      "fields": [
+        {
+          "name": "area_name",
+          "chinese_name": "区域名称",
+          "type": "dimension",
+          "example": "中东公司",
+          "aliases": [
+            "大区"
+          ]
+        },
+        {
+          "name": "model_name",
+          "chinese_name": "车型名称",
+          "type": "dimension",
+          "example": "EMZOOM",
+          "aliases": [
+            "车型"
+          ]
+        },
+        {
+          "name": "terminal_qty",
+          "chinese_name": "终端实际",
+          "type": "metric",
+          "example": 1560,
+          "aliases": [
+            "实际销量"
+          ]
+        },
+        {
+          "name": "target_qty",
+          "chinese_name": "目标",
+          "type": "metric",
+          "example": 1420,
+          "aliases": [
+            "计划",
+            "销量目标"
+          ]
+        },
+        {
+          "name": "achievement_rate",
+          "chinese_name": "达成率",
+          "type": "derived",
+          "example": "109.9%",
+          "aliases": [
+            "完成率"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_sc_order_dly",
+      "name": "SC 订单日表",
+      "domain": "销售域",
+      "description": "新增订单、区域/国家/车型订单分析。",
+      "aliases": [
+        "订单表",
+        "SC订单",
+        "新增订单"
+      ],
+      "metric_paths": [
+        "新增订单",
+        "订单转化",
+        "订单趋势"
+      ],
+      "fields": [
+        {
+          "name": "order_qty",
+          "chinese_name": "新增订单",
+          "type": "metric",
+          "example": 438,
+          "aliases": [
+            "订单数"
+          ]
+        },
+        {
+          "name": "model_name",
+          "chinese_name": "车型名称",
+          "type": "dimension",
+          "example": "GS8",
+          "aliases": [
+            "车型"
+          ]
+        },
+        {
+          "name": "country_name",
+          "chinese_name": "国家",
+          "type": "dimension",
+          "example": "阿联酋",
+          "aliases": [
+            "市场"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_sc_order_dly_v2",
+      "name": "SC 订单预实表",
+      "domain": "销售域",
+      "description": "订单实际与计划，用于订单目标达成分析。",
+      "aliases": [
+        "订单预实",
+        "订单计划"
+      ],
+      "metric_paths": [
+        "订单达成率",
+        "订单缺口"
+      ],
+      "fields": [
+        {
+          "name": "order_qty",
+          "chinese_name": "订单实际",
+          "type": "metric",
+          "example": 438,
+          "aliases": [
+            "实际订单"
+          ]
+        },
+        {
+          "name": "target_order_qty",
+          "chinese_name": "订单目标",
+          "type": "metric",
+          "example": 520,
+          "aliases": [
+            "计划订单"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_stock_dly",
+      "name": "库存日表",
+      "domain": "库存域",
+      "description": "总库存、在途、在店、子公司库存、厂端库存、库龄。",
+      "aliases": [
+        "库存表",
+        "库龄表",
+        "在途库存",
+        "在店库存"
+      ],
+      "metric_paths": [
+        "总库存",
+        "库存周转天数",
+        "库龄结构",
+        "爆库风险"
+      ],
+      "fields": [
+        {
+          "name": "area_name",
+          "chinese_name": "区域名称",
+          "type": "dimension",
+          "example": "中东公司",
+          "aliases": [
+            "大区"
+          ]
+        },
+        {
+          "name": "model_name",
+          "chinese_name": "车型名称",
+          "type": "dimension",
+          "example": "GS8",
+          "aliases": [
+            "车型"
+          ]
+        },
+        {
+          "name": "stock_qty",
+          "chinese_name": "总库存",
+          "type": "metric",
+          "example": 1280,
+          "aliases": [
+            "库存"
+          ]
+        },
+        {
+          "name": "instore_qty",
+          "chinese_name": "在店库存",
+          "type": "metric",
+          "example": 940,
+          "aliases": [
+            "店端库存"
+          ]
+        },
+        {
+          "name": "transit_qty",
+          "chinese_name": "在途库存",
+          "type": "metric",
+          "example": 340,
+          "aliases": [
+            "经销商在途"
+          ]
+        },
+        {
+          "name": "stock_days",
+          "chinese_name": "库存周转天数",
+          "type": "derived",
+          "example": 65,
+          "aliases": [
+            "周转",
+            "库存天数"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_remain_order_dly",
+      "name": "剩余订单日表",
+      "domain": "销售域",
+      "description": "剩余订单、配车、未配车、超时预警。",
+      "aliases": [
+        "剩余订单",
+        "未交订单",
+        "订单池"
+      ],
+      "metric_paths": [
+        "剩余订单",
+        "未配车订单",
+        "超时订单"
+      ],
+      "fields": [
+        {
+          "name": "remain_order_qty",
+          "chinese_name": "剩余订单",
+          "type": "metric",
+          "example": 126,
+          "aliases": [
+            "待交订单"
+          ]
+        },
+        {
+          "name": "allocated_qty",
+          "chinese_name": "已配车",
+          "type": "metric",
+          "example": 88,
+          "aliases": [
+            "配车"
+          ]
+        },
+        {
+          "name": "timeout_qty",
+          "chinese_name": "超时订单",
+          "type": "metric",
+          "example": 9,
+          "aliases": [
+            "逾期"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_scheduling_dly",
+      "name": "排产日表",
+      "domain": "物流域",
+      "description": "交付量、下线量、排产执行。",
+      "aliases": [
+        "排产",
+        "到货",
+        "发运",
+        "物流"
+      ],
+      "metric_paths": [
+        "下线量",
+        "交付量",
+        "到货差额"
+      ],
+      "fields": [
+        {
+          "name": "offline_qty",
+          "chinese_name": "下线量",
+          "type": "metric",
+          "example": 610,
+          "aliases": [
+            "生产下线"
+          ]
+        },
+        {
+          "name": "delivery_qty",
+          "chinese_name": "交付量",
+          "type": "metric",
+          "example": 540,
+          "aliases": [
+            "到货"
+          ]
+        },
+        {
+          "name": "plan_qty",
+          "chinese_name": "排产计划",
+          "type": "metric",
+          "example": 680,
+          "aliases": [
+            "计划"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "v_dm_sal_scheduling_dly_v2",
+      "name": "排产预实表",
+      "domain": "物流域",
+      "description": "下线实际与计划，用于排产执行和到货缺口分析。",
+      "aliases": [
+        "排产预实",
+        "生产计划"
+      ],
+      "metric_paths": [
+        "排产达成率",
+        "排产缺口"
+      ],
+      "fields": [
+        {
+          "name": "offline_qty",
+          "chinese_name": "下线实际",
+          "type": "metric",
+          "example": 610,
+          "aliases": [
+            "实际下线"
+          ]
+        },
+        {
+          "name": "plan_offline_qty",
+          "chinese_name": "下线计划",
+          "type": "metric",
+          "example": 680,
+          "aliases": [
+            "计划下线"
+          ]
+        }
+      ]
+    }
+  ],
+  "metric_definitions": [
+    {
+      "id": "stock_days",
+      "name": "库存周转天数",
+      "aliases": [
+        "库存天数",
+        "周转天数",
+        "库存周转"
+      ],
+      "formula": "库存周转天数 = 当前库存 / 近30天日均终端销量",
+      "healthy_range": "30-45 天",
+      "warning_rule": "超过 60 天标记为高风险。",
+      "source_tables": [
+        "v_dm_sal_stock_dly",
+        "v_dm_sal_wolesale_terminal_dly"
+      ]
+    },
+    {
+      "id": "achievement_rate",
+      "name": "目标达成率",
+      "aliases": [
+        "完成率",
+        "达成"
+      ],
+      "formula": "目标达成率 = 实际销量 / 目标销量 * 100%",
+      "healthy_range": ">= 100%",
+      "warning_rule": "低于 90% 需要关注缺口来源。",
+      "source_tables": [
+        "v_dm_sal_wolesale_terminal_dly_v2"
+      ]
+    }
+  ]
+}

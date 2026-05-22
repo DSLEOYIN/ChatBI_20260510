@@ -68,6 +68,18 @@ export async function getSkills() {
   return response.json();
 }
 
+export async function getStreamContract() {
+  const response = await fetch(`${API_BASE}/config/stream-contract`);
+  if (!response.ok) return null;
+  return response.json();
+}
+
+export async function getMockContract() {
+  const response = await fetch(`${API_BASE}/config/mock-contract`);
+  if (!response.ok) return null;
+  return response.json();
+}
+
 export async function pinConversation(id, pinned) {
   const response = await fetch(`${API_BASE}/conversations/${id}/pin?pinned=${pinned ? "true" : "false"}`, {
     method: "POST",

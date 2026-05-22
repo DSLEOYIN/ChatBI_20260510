@@ -29,6 +29,79 @@ DOWNLOAD_CONTRACT = {
     "note": "第一阶段明确继续使用 CSV，前端文案统一为“下载 CSV 明细”。后续可平滑新增 xlsx endpoint。",
 }
 
+STREAM_EVENT_CONTRACT = {
+    "version": "2026-05-22.mock.v1",
+    "endpoint": "/api/chat/stream",
+    "transport": "server-sent-events",
+    "content_type": "text/event-stream",
+    "wire_format": {
+        "event": "same value as data.type",
+        "data": {
+            "type": "conversation_id | step | sql | answer | canvas | done | error",
+            "sequence": "monotonic integer starting at 1 within one stream",
+            "emitted_at": "ISO-8601 UTC timestamp",
+            "data": "event-specific payload",
+        },
+    },
+    "events": {
+        "conversation_id": {"order": 1, "data": "string conversation id", "required": True},
+        "step": {
+            "order": "2..n",
+            "data": "ExecutionStep",
+            "required": True,
+            "schema": {
+                "name": "string",
+                "status": "done | warning | error",
+                "detail": "string",
+                "tool": "string | null",
+                "duration": "string | null",
+                "input": "object",
+                "output": "object",
+            },
+        },
+        "sql": {"order": "after step events when sql exists", "data": "string readonly SQL", "required": False},
+        "answer": {"order": "after sql or after step events", "data": "string final business answer", "required": True},
+        "canvas": {
+            "order": "after answer",
+            "data": "CanvasPayload",
+            "required": True,
+            "component_types": ["answer", "kpi", "kpi_grid", "chart", "table", "risk", "definition", "search_results", "insight"],
+        },
+        "done": {"order": "last successful event", "data": None, "required": True},
+        "error": {"order": "terminal failure event", "data": {"message": "string"}, "required": False},
+    },
+}
+
+MOCK_API_CONTRACT = {
+    "version": "2026-05-22.mock.v1",
+    "phase": "phase-1-react-fastapi-mock",
+    "capabilities": {
+        "conversation_create": {"method": "POST", "path": "/api/conversations"},
+        "conversation_list": {"method": "GET", "path": "/api/conversations"},
+        "conversation_detail": {"method": "GET", "path": "/api/conversations/{conversation_id}"},
+        "conversation_delete": {"method": "DELETE", "path": "/api/conversations/{conversation_id}"},
+        "conversation_pin": {"method": "POST", "path": "/api/conversations/{conversation_id}/pin"},
+        "chat": {"method": "POST", "path": "/api/chat"},
+        "chat_stream": {"method": "POST", "path": "/api/chat/stream"},
+        "data_assets": {
+            "method": "GET",
+            "path": "/api/config/data-assets",
+            "source": "server/config/data_assets.json",
+            "override_env": "CHATBI_DATA_ASSETS_PATH",
+        },
+        "skills": {"method": "GET", "path": "/api/config/skills"},
+        "canvas_schema": {"method": "GET", "path": "/api/config/canvas-schema"},
+        "stream_contract": {"method": "GET", "path": "/api/config/stream-contract"},
+        "download_contract": {"method": "GET", "path": "/api/config/download-contract"},
+        "storage_status": {"method": "GET", "path": "/api/config/storage"},
+        "mock_search": {"method": "GET", "path": "/api/mock/search"},
+        "detail_download": {"method": "GET", "path": "/api/downloads/mock-detail.csv", "format": "csv"},
+    },
+    "intents": ["chat", "simple_query", "analysis", "comparison", "alert", "definition", "search"],
+    "canvas_component_types": ["answer", "kpi", "kpi_grid", "chart", "table", "risk", "definition", "search_results", "insight"],
+    "download_format": "csv",
+}
+
 MOCK_SEARCH_RESULTS = {
     "query": "中东 SUV 市场 竞品 促销",
     "provider": "mock-tavily",
