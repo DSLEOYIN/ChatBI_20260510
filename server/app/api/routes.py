@@ -11,8 +11,19 @@ from app.mock.catalog import (
     STREAM_EVENT_CONTRACT,
 )
 from app.config_loader import load_data_catalog
+from app.dify import dify_config_metadata, retrieve_knowledge
 from app.mock.engine import build_result, detail_csv, make_conversation, mock_search, stream_result
-from app.models.schemas import ChatRequest, ConversationCreate, SearchMockResult
+from app.models.schemas import (
+    ChatRequest,
+    ConversationCreate,
+    KnowledgeRetrieveRequest,
+    KnowledgeRetrieveResult,
+    QueryRequest,
+    QueryResult,
+    SearchMockResult,
+    SqlValidationResult,
+)
+from app.query_service import execute_query, query_config_metadata, validate_query
 from app.storage import (
     append_exchange,
     create_conversation_record,
@@ -102,9 +113,34 @@ async def storage_config():
     return storage_metadata()
 
 
+@router.get("/config/dify")
+async def dify_config():
+    return dify_config_metadata()
+
+
+@router.get("/config/query")
+async def query_config():
+    return query_config_metadata()
+
+
 @router.get("/mock/search", response_model=SearchMockResult)
 async def search_mock(q: str = "中东 SUV 市场 竞品 促销"):
     return mock_search(q)
+
+
+@router.post("/knowledge/retrieve", response_model=KnowledgeRetrieveResult)
+async def knowledge_retrieve(payload: KnowledgeRetrieveRequest):
+    return await retrieve_knowledge(payload)
+
+
+@router.post("/query/validate", response_model=SqlValidationResult)
+async def query_validate(payload: QueryRequest):
+    return validate_query(payload.sql)
+
+
+@router.post("/query/execute", response_model=QueryResult)
+async def query_execute(payload: QueryRequest):
+    return execute_query(payload)
 
 
 @router.post("/chat")

@@ -4,3 +4,9 @@ chatbi_mock.db
 server/chatbi_mock.db
 __pycache__/
 *.pyc
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example

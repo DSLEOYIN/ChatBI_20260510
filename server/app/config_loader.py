@@ -1,17 +1,17 @@
 import json
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from app.mock.catalog import DATA_ASSETS, METRIC_DEFINITIONS
+from app.settings import settings
 
 
 DEFAULT_DATA_ASSETS_PATH = Path(__file__).resolve().parents[1] / "config" / "data_assets.json"
 
 
 def data_assets_path() -> Path:
-    return Path(os.getenv("CHATBI_DATA_ASSETS_PATH", DEFAULT_DATA_ASSETS_PATH))
+    return settings.chatbi_data_assets_path
 
 
 @lru_cache(maxsize=1)

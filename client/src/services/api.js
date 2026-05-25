@@ -80,6 +80,24 @@ export async function getMockContract() {
   return response.json();
 }
 
+export async function getDifyConfig() {
+  const response = await fetch(`${API_BASE}/config/dify`);
+  if (!response.ok) return null;
+  return response.json();
+}
+
+export async function retrieveKnowledge(payload) {
+  const response = await fetch(`${API_BASE}/knowledge/retrieve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Knowledge retrieve failed: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function pinConversation(id, pinned) {
   const response = await fetch(`${API_BASE}/conversations/${id}/pin?pinned=${pinned ? "true" : "false"}`, {
     method: "POST",

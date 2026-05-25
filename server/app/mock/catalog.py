@@ -95,12 +95,72 @@ MOCK_API_CONTRACT = {
         "download_contract": {"method": "GET", "path": "/api/config/download-contract"},
         "storage_status": {"method": "GET", "path": "/api/config/storage"},
         "mock_search": {"method": "GET", "path": "/api/mock/search"},
+        "knowledge_retrieve": {
+            "method": "POST",
+            "path": "/api/knowledge/retrieve",
+            "provider": "mock-dify by default; real Dify when CHATBI_DIFY_ENABLED=true",
+        },
+        "dify_status": {"method": "GET", "path": "/api/config/dify"},
         "detail_download": {"method": "GET", "path": "/api/downloads/mock-detail.csv", "format": "csv"},
     },
     "intents": ["chat", "simple_query", "analysis", "comparison", "alert", "definition", "search"],
     "canvas_component_types": ["answer", "kpi", "kpi_grid", "chart", "table", "risk", "definition", "search_results", "insight"],
     "download_format": "csv",
 }
+
+DIFY_DATASETS = {
+    "9e07fcf2-56cf-4f2c-b115-8727e721fbd3": {
+        "name": "车型知识库",
+        "description": "包含车型参数、配置、功能介绍等车型相关文档。",
+        "use_cases": ["车型配置", "参数对比", "功能介绍"],
+    },
+    "486476a8-15f6-4359-bcb5-6efd40d90373": {
+        "name": "国际-大区知识库",
+        "description": "国际大区相关资料，适合跨区域经营问题。",
+        "use_cases": ["大区信息", "跨大区业务"],
+    },
+    "90560d64-db69-4c66-88ca-9c86a340dd5d": {
+        "name": "国际-国家知识库",
+        "description": "国家级市场、政策和法规资料。",
+        "use_cases": ["国家政策", "市场数据", "法规要求"],
+    },
+    "ffa84ba6-4ec9-44a0-8f6d-594b27f7a829": {
+        "name": "国际问答对-V3",
+        "description": "默认高质量问答库，适合通用业务咨询。",
+        "use_cases": ["通用问答", "常见问题", "业务咨询"],
+    },
+    "959f346f-f950-480c-a1d7-d792ad10be33": {
+        "name": "同环比-国际问答对-V2",
+        "description": "历史同比、环比和同期对比资料。",
+        "use_cases": ["同比", "环比", "历史对比"],
+    },
+}
+
+DIFY_DATASET_ALIASES = {info["name"]: dataset_id for dataset_id, info in DIFY_DATASETS.items()}
+
+MOCK_DIFY_RECORDS = [
+    {
+        "segment_id": "mock-dify-stock-days",
+        "document_name": "库存指标口径说明",
+        "content": "库存周转天数 = 当前库存 / 近30天日均终端销量。通常 30-45 天为健康区间，超过 60 天需要重点预警。",
+        "score": 0.92,
+        "metadata": {"source": "mock", "metric": "stock_days"},
+    },
+    {
+        "segment_id": "mock-dify-achievement-rate",
+        "document_name": "目标达成率指标说明",
+        "content": "目标达成率 = 实际销量 / 目标销量 * 100%。低于 90% 时需要关注缺口来源和资源投放节奏。",
+        "score": 0.86,
+        "metadata": {"source": "mock", "metric": "achievement_rate"},
+    },
+    {
+        "segment_id": "mock-dify-inventory-warning",
+        "document_name": "库存预警业务规则",
+        "content": "库存预警需要结合总库存、在店库存、在途库存、库龄结构和近 30 天终端动销综合判断。",
+        "score": 0.81,
+        "metadata": {"source": "mock", "domain": "inventory"},
+    },
+]
 
 MOCK_SEARCH_RESULTS = {
     "query": "中东 SUV 市场 竞品 促销",

@@ -1,13 +1,13 @@
 import json
-import os
 import sqlite3
 from pathlib import Path
 from threading import Lock
 
 from app.mock.engine import now_iso
+from app.settings import settings
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "chatbi_mock.db"
-DB_PATH = Path(os.getenv("CHATBI_DB_PATH", DEFAULT_DB_PATH))
+DB_PATH = settings.chatbi_db_path
 _LOCK = Lock()
 
 

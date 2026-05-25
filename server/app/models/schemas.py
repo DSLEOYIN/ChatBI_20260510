@@ -86,3 +86,55 @@ class SearchMockResult(BaseModel):
     answer: str
     results: list[dict[str, Any]] = Field(default_factory=list)
     fallback: dict[str, Any] | None = None
+
+
+RetrievalSearchMethod = Literal["semantic_search", "keyword_search", "hybrid_search"]
+
+
+class KnowledgeRetrieveRequest(BaseModel):
+    query: str = Field(min_length=1)
+    dataset_id: str = "国际问答对-V3"
+    search_method: RetrievalSearchMethod = "semantic_search"
+    top_k: int = Field(default=3, ge=1, le=20)
+    score_threshold_enabled: bool = False
+    score_threshold: float = Field(default=0.5, ge=0, le=1)
+    reranking_enable: bool = False
+    vector_weight: float = Field(default=0.7, ge=0, le=1)
+
+
+class KnowledgeRetrieveResult(BaseModel):
+    query: str
+    dataset_id: str
+    dataset_name: str
+    provider: str
+    search_method: RetrievalSearchMethod
+    top_k: int
+    records: list[dict[str, Any]] = Field(default_factory=list)
+    fallback: dict[str, Any] | None = None
+    request_payload: dict[str, Any] | None = None
+
+
+class SqlValidationResult(BaseModel):
+    valid: bool
+    sql: str
+    tables: list[str] = Field(default_factory=list)
+    allowed_tables: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class QueryRequest(BaseModel):
+    sql: str = Field(min_length=1)
+    limit: int = Field(default=200, ge=1, le=1000)
+
+
+class QueryResult(BaseModel):
+    provider: Literal["mock", "mysql"]
+    sql: str
+    validation: SqlValidationResult
+    columns: list[str] = Field(default_factory=list)
+    rows: list[dict[str, Any]] = Field(default_factory=list)
+    row_count: int = 0
+    elapsed_ms: int
+    connection: dict[str, Any] = Field(default_factory=dict)
+    error: dict[str, Any] | None = None
