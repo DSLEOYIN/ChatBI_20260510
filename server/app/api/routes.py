@@ -12,7 +12,7 @@ from app.mock.catalog import (
 )
 from app.config_loader import load_data_catalog
 from app.dify import dify_config_metadata, retrieve_knowledge
-from app.llm import chat_completion, llm_config_metadata
+from app.llm import chat_completion, generate_sql_from_question, llm_config_metadata
 from app.mock.engine import build_result, detail_csv, make_conversation, mock_search, stream_result
 from app.models.schemas import (
     ChatRequest,
@@ -24,6 +24,8 @@ from app.models.schemas import (
     QueryRequest,
     QueryResult,
     SearchMockResult,
+    SqlGenerateRequest,
+    SqlGenerateResult,
     SqlValidationResult,
 )
 from app.query_service import execute_query, query_config_metadata, validate_query
@@ -132,6 +134,15 @@ async def llm_test(payload: LlmTestRequest):
         return chat_completion(payload.prompt, payload.system_prompt, payload.temperature)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/sql/generate", response_model=SqlGenerateResult)
+async def sql_generate(payload: SqlGenerateRequest):
+    try:
+        result = generate_sql_from_question(payload.question, load_data_catalog(), payload.temperature)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {**result, "validation": result["validation"].model_dump()}
 
 
 @router.get("/config/query")

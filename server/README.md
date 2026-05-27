@@ -81,6 +81,13 @@ Agent layer explicitly consumes this provider.
 - Model: `DEEPSEEK_MODEL=deepseek-v4-flash`
 - Timeout seconds: `DEEPSEEK_TIMEOUT=60`
 - Test endpoint: `POST /api/llm/test`
+- SQL generation endpoint: `POST /api/sql/generate`
+
+`POST /api/sql/generate` is a privacy boundary for real-data environments: the
+LLM receives only the user question and configured data asset metadata. It does
+not receive query result rows, and it does not analyze confidential business
+data. The generated SQL is validated locally by `app/sql_guard.py` before it can
+be sent to `POST /api/query/execute`.
 
 ## MySQL Query Service
 

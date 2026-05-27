@@ -49,6 +49,20 @@ class LlmTestResult(BaseModel):
     usage: dict[str, Any] = Field(default_factory=dict)
 
 
+class SqlGenerateRequest(BaseModel):
+    question: str = Field(min_length=1)
+    temperature: float = Field(default=0.0, ge=0, le=2)
+
+
+class SqlGenerateResult(BaseModel):
+    provider: str
+    model: str
+    sql: str
+    validation: dict[str, Any]
+    finish_reason: str | None = None
+    usage: dict[str, Any] = Field(default_factory=dict)
+
+
 StreamEventType = Literal["conversation_id", "step", "sql", "answer", "canvas", "done", "error"]
 CanvasComponentType = Literal["answer", "kpi", "kpi_grid", "chart", "table", "risk", "definition", "search_results", "insight"]
 

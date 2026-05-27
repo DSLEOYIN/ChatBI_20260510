@@ -98,6 +98,18 @@ export async function retrieveKnowledge(payload) {
   return response.json();
 }
 
+export async function generateSql(payload) {
+  const response = await fetch(`${API_BASE}/sql/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`SQL generate failed: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function pinConversation(id, pinned) {
   const response = await fetch(`${API_BASE}/conversations/${id}/pin?pinned=${pinned ? "true" : "false"}`, {
     method: "POST",

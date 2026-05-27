@@ -1,11 +1,19 @@
 import json
+import re
+import textwrap
 import urllib.error
 import urllib.request
 from typing import Any
 
 from app.settings import settings
+from app.sql_guard import validate_sql
 
 DEFAULT_SYSTEM_PROMPT = "你是 ChatBI 的后端连通性测试助手，请用简短中文回答。"
+SQL_GENERATION_SYSTEM_PROMPT = (
+    "你是 ChatBI 的 SQL 生成助手。你只能根据用户问题和给定数据资产元数据生成一条 MySQL SELECT。"
+    "不要分析或总结真实业务数据，不要假设查询结果，不要输出解释。"
+    "只返回 SQL 本身，禁止 INSERT、UPDATE、DELETE、DROP、ALTER、TRUNCATE、CREATE、CALL、OUTFILE。"
+)
 
 
 def llm_config_metadata() -> dict[str, Any]:
@@ -94,4 +102,83 @@ def mock_completion(prompt: str) -> dict[str, Any]:
         "content": f"mock LLM 已收到：{prompt}",
         "finish_reason": "stop",
         "usage": {},
+    }
+
+
+def build_sql_generation_prompt(
+    question: str,
+    catalog: dict[str, Any],
+    sample_rows: list[dict[str, Any]] | None = None,
+) -> str:
+    return "\n".join(
+        [
+            "请为下面的业务问题生成一条只读 MySQL SELECT。",
+            "安全约束：",
+            "- 只允许 SELECT，且只允许一条语句。",
+            "- 只能使用数据资产清单中的表和字段。",
+            "- 如果用户问题包含明确实体值，WHERE 条件必须保留原始字面量，不要擅自简称、翻译或改写。",
+            "- 示例：用户说“中东公司”时，条件值应使用 '中东公司'，不要改成 '中东'。",
+            "- 不要接收、引用、分析或总结任何真实查询结果。",
+            "- 不要输出 Markdown、解释、注释或多余文本。",
+            "",
+            f"用户问题：{question}",
+            "",
+            "数据资产清单：",
+            json.dumps(compact_catalog_for_sql(catalog), ensure_ascii=False, indent=2),
+        ]
+    )
+
+
+def compact_catalog_for_sql(catalog: dict[str, Any]) -> dict[str, Any]:
+    assets = []
+    for asset in catalog.get("assets", []):
+        fields = []
+        for field in asset.get("fields", []):
+            fields.append(
+                {
+                    key: field.get(key)
+                    for key in ("name", "cn_name", "chinese_name", "type", "aliases", "metric")
+                    if field.get(key) not in (None, "", [])
+                }
+            )
+        assets.append(
+            {
+                key: asset.get(key)
+                for key in ("table", "name", "domain", "description", "aliases", "metric_paths")
+                if asset.get(key) not in (None, "", [])
+            }
+            | {"fields": fields}
+        )
+
+    return {
+        "assets": assets,
+        "metric_definitions": catalog.get("metric_definitions", []),
+    }
+
+
+def extract_sql_from_completion(content: str) -> str:
+    fenced = re.search(r"```(?:sql)?\s*(.*?)```", content, flags=re.IGNORECASE | re.DOTALL)
+    sql = fenced.group(1) if fenced else content
+    sql = textwrap.dedent(sql).strip()
+    sql = "\n".join(line.strip() for line in sql.splitlines() if line.strip())
+    sql = re.sub(r"^\s*(SQL|sql)\s*[:：]\s*", "", sql)
+    return sql.strip()
+
+
+def generate_sql_from_question(
+    question: str,
+    catalog: dict[str, Any],
+    temperature: float = 0.0,
+) -> dict[str, Any]:
+    prompt = build_sql_generation_prompt(question, catalog)
+    completion = chat_completion(prompt, SQL_GENERATION_SYSTEM_PROMPT, temperature)
+    sql = extract_sql_from_completion(completion.get("content", ""))
+    validation = validate_sql(sql)
+    return {
+        "provider": completion.get("provider", "mock"),
+        "model": completion.get("model", settings.deepseek_model),
+        "sql": sql,
+        "validation": validation,
+        "finish_reason": completion.get("finish_reason"),
+        "usage": completion.get("usage") or {},
     }

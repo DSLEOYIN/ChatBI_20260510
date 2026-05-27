@@ -103,6 +103,11 @@ MOCK_API_CONTRACT = {
         "dify_status": {"method": "GET", "path": "/api/config/dify"},
         "llm_status": {"method": "GET", "path": "/api/config/llm"},
         "llm_test": {"method": "POST", "path": "/api/llm/test"},
+        "sql_generate": {
+            "method": "POST",
+            "path": "/api/sql/generate",
+            "privacy_boundary": "DeepSeek receives only the user question and data asset metadata; query result rows are never sent to the LLM.",
+        },
         "detail_download": {"method": "GET", "path": "/api/downloads/mock-detail.csv", "format": "csv"},
     },
     "intents": ["chat", "simple_query", "analysis", "comparison", "alert", "definition", "search"],
