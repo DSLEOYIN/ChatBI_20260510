@@ -18,7 +18,9 @@ uvicorn app.main:app --reload --port 8000
 - `GET /api/config/data-assets`
 - `GET /api/config/storage`
 - `GET /api/config/dify`
+- `GET /api/config/llm`
 - `GET /api/config/query`
+- `POST /api/llm/test`
 - `POST /api/knowledge/retrieve`
 - `POST /api/query/validate`
 - `POST /api/query/execute`
@@ -65,6 +67,20 @@ lookups with real Dify.
 
 When real Dify is disabled, missing, or unreachable, the endpoint returns mock
 records with a `fallback` reason while preserving the same response shape.
+
+## DeepSeek LLM
+
+The backend exposes a configuration boundary for switching later Agent work from
+mock responses to DeepSeek. Current mock chat behavior is preserved until the
+Agent layer explicitly consumes this provider.
+
+- Status/config endpoint: `GET /api/config/llm`
+- Provider: `CHATBI_LLM_PROVIDER=mock | deepseek`
+- Required for real DeepSeek: `DEEPSEEK_API_KEY`
+- Optional base URL override: `DEEPSEEK_API_BASE_URL=https://api.deepseek.com`
+- Model: `DEEPSEEK_MODEL=deepseek-v4-flash`
+- Timeout seconds: `DEEPSEEK_TIMEOUT=60`
+- Test endpoint: `POST /api/llm/test`
 
 ## MySQL Query Service
 

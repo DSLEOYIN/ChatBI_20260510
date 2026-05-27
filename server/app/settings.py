@@ -67,6 +67,11 @@ class Settings:
     dify_reranking_model: str
     dify_embedding_provider: str
     dify_embedding_model: str
+    chatbi_llm_provider: str
+    deepseek_api_base_url: str
+    deepseek_api_key: str
+    deepseek_model: str
+    deepseek_timeout: int
     chatbi_query_provider: str
     mysql_host: str
     mysql_port: int
@@ -97,6 +102,11 @@ def load_settings() -> Settings:
         dify_reranking_model=os.getenv("DIFY_RERANKING_MODEL", "netease-youdao/bce-reranker-base_v1"),
         dify_embedding_provider=os.getenv("DIFY_EMBEDDING_PROVIDER", "langgenius/siliconflow/siliconflow"),
         dify_embedding_model=os.getenv("DIFY_EMBEDDING_MODEL", "BAAI/bge-large-zh-v1.5"),
+        chatbi_llm_provider=os.getenv("CHATBI_LLM_PROVIDER", "mock").lower(),
+        deepseek_api_base_url=os.getenv("DEEPSEEK_API_BASE_URL", "https://api.deepseek.com").rstrip("/"),
+        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY", "").strip(),
+        deepseek_model=os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
+        deepseek_timeout=env_int("DEEPSEEK_TIMEOUT", 60),
         chatbi_query_provider=os.getenv("CHATBI_QUERY_PROVIDER", "mock").lower(),
         mysql_host=os.getenv("MYSQL_HOST", ""),
         mysql_port=env_int("MYSQL_PORT", 3306),

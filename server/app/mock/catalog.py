@@ -101,6 +101,8 @@ MOCK_API_CONTRACT = {
             "provider": "mock-dify by default; real Dify when CHATBI_DIFY_ENABLED=true",
         },
         "dify_status": {"method": "GET", "path": "/api/config/dify"},
+        "llm_status": {"method": "GET", "path": "/api/config/llm"},
+        "llm_test": {"method": "POST", "path": "/api/llm/test"},
         "detail_download": {"method": "GET", "path": "/api/downloads/mock-detail.csv", "format": "csv"},
     },
     "intents": ["chat", "simple_query", "analysis", "comparison", "alert", "definition", "search"],

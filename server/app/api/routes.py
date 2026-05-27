@@ -12,12 +12,15 @@ from app.mock.catalog import (
 )
 from app.config_loader import load_data_catalog
 from app.dify import dify_config_metadata, retrieve_knowledge
+from app.llm import chat_completion, llm_config_metadata
 from app.mock.engine import build_result, detail_csv, make_conversation, mock_search, stream_result
 from app.models.schemas import (
     ChatRequest,
     ConversationCreate,
     KnowledgeRetrieveRequest,
     KnowledgeRetrieveResult,
+    LlmTestRequest,
+    LlmTestResult,
     QueryRequest,
     QueryResult,
     SearchMockResult,
@@ -116,6 +119,19 @@ async def storage_config():
 @router.get("/config/dify")
 async def dify_config():
     return dify_config_metadata()
+
+
+@router.get("/config/llm")
+async def llm_config():
+    return llm_config_metadata()
+
+
+@router.post("/llm/test", response_model=LlmTestResult)
+async def llm_test(payload: LlmTestRequest):
+    try:
+        return chat_completion(payload.prompt, payload.system_prompt, payload.temperature)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/config/query")

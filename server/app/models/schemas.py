@@ -34,6 +34,21 @@ class ChatRequest(BaseModel):
     web_search: bool = False
 
 
+class LlmTestRequest(BaseModel):
+    prompt: str = Field(default="请用一句话说明 DeepSeek LLM 已经连通。", min_length=1)
+    system_prompt: str = "你是 ChatBI 的后端连通性测试助手，请用简短中文回答。"
+    temperature: float = Field(default=0.1, ge=0, le=2)
+
+
+class LlmTestResult(BaseModel):
+    provider: str
+    id: str | None = None
+    model: str
+    content: str
+    finish_reason: str | None = None
+    usage: dict[str, Any] = Field(default_factory=dict)
+
+
 StreamEventType = Literal["conversation_id", "step", "sql", "answer", "canvas", "done", "error"]
 CanvasComponentType = Literal["answer", "kpi", "kpi_grid", "chart", "table", "risk", "definition", "search_results", "insight"]
 
